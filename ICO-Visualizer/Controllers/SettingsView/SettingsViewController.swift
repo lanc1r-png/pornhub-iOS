@@ -16,7 +16,7 @@ class SettingsViewController: BaseViewController {
         
         if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
             flowLayout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 45)
-            flowLayout.sectionInset = UIEdgeInsets(top: 12, left: 0, bottom: 0, right: 12)
+            flowLayout.sectionInset = UIEdgeInsets(top: 12, left: 12, bottom: 0, right: 12)
             flowLayout.sectionHeadersPinToVisibleBounds = true
             flowLayout.estimatedItemSize = CGSize(
                 width: UIScreen.main.bounds.width - 2,

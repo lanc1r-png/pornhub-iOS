@@ -96,9 +96,12 @@ class APIService {
         self.sendSearchRequest(searchText: searchText, category: nil, page: page, completionHandler: completionHandler)
     }
     
-    func sendSearchRequest(searchText: String? = nil, category: String? = nil, page: Int = 1, completionHandler: ((Result<VideosResponseModel, Error>) -> Void)?){
+    func sendSearchRequest(searchText: String? = nil, category: String? = nil, page: Int = 1, ordering: String = "mostviewed", period: String? = nil, completionHandler: ((Result<VideosResponseModel, Error>) -> Void)?){
         let url = "\(self.baseUrl)/search"
-        var parameters: Parameters = [ "page" : page, "ordering" : "mostviewed", "thumbsize" : "large" ]
+        var parameters: Parameters = [ "page" : page, "ordering" : ordering, "thumbsize" : "large" ]
+        if let period = period, ordering == "mostviewed" || ordering == "rating" {
+            parameters["period"] = period
+        }
         if let searchText = searchText {
             parameters["search"] = searchText
         }

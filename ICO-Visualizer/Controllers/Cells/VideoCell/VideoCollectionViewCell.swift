@@ -26,16 +26,22 @@ class VideoCollectionViewCell: FullWidthCollectionViewCell {
     
     override func awakeFromNib() {
         super.awakeFromNib()
-        backgroundCellView.applyCardStyle(cornerRadius: 28)
+        backgroundCellView.applyCardStyle(cornerRadius: 24)
+        // Compact margins so two cards fit per row
+        for c in contentView.constraints { c.constant = 4 }
+        for c in backgroundCellView.constraints where c.constant == 12 || c.constant == 11 { c.constant = 8 }
+        titleLabel.numberOfLines = 2
+        let twoLines = UIFont.systemFont(ofSize: 14, weight: .semibold).lineHeight * 2
+        titleLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: ceil(twoLines)).isActive = true
         thumbImageView.contentMode = .scaleAspectFill
         thumbImageView.clipsToBounds = true
-        thumbImageView.layer.cornerRadius = 20
+        thumbImageView.layer.cornerRadius = 16
         thumbImageView.layer.cornerCurve = .continuous
         gradientView.isHidden = true
-        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        starLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        starLabel.font = UIFont.systemFont(ofSize: 13, weight: .medium)
         starLabel.textColor = ColorLayout.default_orange
-        viewsLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        viewsLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         viewsLabel.textColor = UIColor.white.withAlphaComponent(0.6)
         durationLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
         durationLabel.textColor = .white

@@ -16,6 +16,9 @@ class HomeViewCoordinator {
     
     public var searchText: String? = nil
     public var category: String? = nil
+    public var ordering: String = "mostviewed"
+    public var period: String? = nil
+    private var generation = 0
     
     private var delegate: HomeViewDelegate!
     
@@ -24,7 +27,9 @@ class HomeViewCoordinator {
     }
     
     func loadData(){
-        APIService.shared.sendSearchRequest(searchText: self.searchText, category: self.category, page: currentPage) { result in
+        let gen = generation
+        APIService.shared.sendSearchRequest(searchText: self.searchText, category: self.category, page: currentPage, ordering: self.ordering, period: self.period) { result in
+            guard gen == self.generation else { return } // stale response after sort/search change
             switch result {
             case .success(let videos):
                 self.videos.append(contentsOf: videos.videos)
@@ -55,7 +60,17 @@ class HomeViewCoordinator {
         }
     }
     
+    func applySort(ordering: String, period: String?){
+        self.generation += 1
+        self.ordering = ordering
+        self.period = period
+        self.currentPage = 1
+        self.videos = []
+        self.loadData()
+    }
+
     func search(searchText: String?){
+        self.generation += 1
         self.searchText = searchText
         self.category = nil
         self.currentPage = 1
@@ -63,6 +78,7 @@ class HomeViewCoordinator {
     }
     
     func searchForCategory(category : String){
+        self.generation += 1
         self.currentPage = 1
         self.searchText = nil
         self.category = category

@@ -12,6 +12,14 @@ class NavigationButtonCollectionViewCell: FullWidthCollectionViewCell {
     @IBOutlet weak var titleView: UILabel!
     
     private var tapAction: (() -> Void)?
+
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        for c in contentView.constraints {
+            if c.firstAttribute == .leading || c.firstAttribute == .trailing { c.constant = 4 } else { c.constant = 6 }
+        }
+        titleView.heightAnchor.constraint(greaterThanOrEqualToConstant: 54).isActive = true
+    }
     
     func setup(title: String, onTap: (() -> Void)?){
         tapView.applyCardStyle(cornerRadius: 22)

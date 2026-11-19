@@ -15,6 +15,18 @@ class HomeViewController: BaseViewController {
     private var loadingData = false
     private var searchGlass: UIVisualEffectView?
 
+    // Sorting (like the original site)
+    private let sortOptions: [(title: String, key: String, hasPeriod: Bool)] = [
+        ("Popular", "mostviewed", true), ("New", "newest", false), ("Top Rated", "rating", true), ("Featured", "featured", false)
+    ]
+    private let periodOptions: [(title: String, key: String?)] = [("All Time", nil), ("This Week", "weekly"), ("This Month", "monthly")]
+    private var currentOrdering = "mostviewed"
+    private var currentPeriod: String? = nil
+    private var sortButtons: [UIButton] = []
+    private let periodButton = UIButton(type: .system)
+    private let sortScroll = UIScrollView()
+    private let sortStack = UIStackView()
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         Glass.roundCapsuleIfNeeded(searchGlass)
@@ -23,7 +35,7 @@ class HomeViewController: BaseViewController {
     let searchView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = .clear
+        view.backgroundColor = ColorLayout.default_background
         return view
     }()
     
@@ -74,13 +86,111 @@ class HomeViewController: BaseViewController {
         self.present(alert, animated: true, completion: nil)
     }
     
+    // MARK: - Sort bar
+    private func buildSortBar() {
+        sortScroll.translatesAutoresizingMaskIntoConstraints = false
+        sortScroll.showsHorizontalScrollIndicator = false
+        sortScroll.alwaysBounceHorizontal = true
+        searchView.addSubview(sortScroll)
+        sortStack.axis = .horizontal
+        sortStack.spacing = 8
+        sortStack.translatesAutoresizingMaskIntoConstraints = false
+        sortScroll.addSubview(sortStack)
+        NSLayoutConstraint.activate([
+            sortScroll.leadingAnchor.constraint(equalTo: searchView.leadingAnchor),
+            sortScroll.trailingAnchor.constraint(equalTo: searchView.trailingAnchor),
+            sortScroll.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 10),
+            sortScroll.heightAnchor.constraint(equalToConstant: 40),
+            sortStack.leadingAnchor.constraint(equalTo: sortScroll.contentLayoutGuide.leadingAnchor, constant: 16),
+            sortStack.trailingAnchor.constraint(equalTo: sortScroll.contentLayoutGuide.trailingAnchor, constant: -16),
+            sortStack.topAnchor.constraint(equalTo: sortScroll.contentLayoutGuide.topAnchor),
+            sortStack.bottomAnchor.constraint(equalTo: sortScroll.contentLayoutGuide.bottomAnchor),
+            sortStack.heightAnchor.constraint(equalTo: sortScroll.frameLayoutGuide.heightAnchor)
+        ])
+        for (i, _) in sortOptions.enumerated() {
+            let button = UIButton(type: .system)
+            button.tag = i
+            button.addTarget(self, action: #selector(onSortTap(_:)), for: .touchUpInside)
+            sortButtons.append(button)
+            sortStack.addArrangedSubview(button)
+        }
+        sortStack.addArrangedSubview(periodButton)
+        refreshSortBar()
+    }
+
+    private func styleChip(_ button: UIButton, title: String, selected: Bool, showsChevron: Bool = false) {
+        var config: UIButton.Configuration
+        if #available(iOS 26.0, *) {
+            config = selected ? UIButton.Configuration.prominentGlass() : UIButton.Configuration.glass()
+        } else {
+            config = selected ? UIButton.Configuration.filled() : UIButton.Configuration.gray()
+        }
+        config.title = title
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        config.baseForegroundColor = .white
+        if showsChevron {
+            config.image = UIImage(systemName: "chevron.down", withConfiguration: UIImage.SymbolConfiguration(pointSize: 10, weight: .bold))
+            config.imagePlacement = .trailing
+            config.imagePadding = 6
+        }
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+            return out
+        }
+        button.tintColor = ColorLayout.default_orange
+        if selected { config.baseBackgroundColor = ColorLayout.default_orange }
+        button.configuration = config
+    }
+
+    private func refreshSortBar() {
+        for (i, option) in sortOptions.enumerated() {
+            styleChip(sortButtons[i], title: option.title.localized, selected: option.key == currentOrdering)
+        }
+        let hasPeriod = sortOptions.first(where: { $0.key == currentOrdering })?.hasPeriod ?? false
+        periodButton.isHidden = !hasPeriod
+        let currentTitle = periodOptions.first(where: { $0.key == currentPeriod })?.title ?? "All Time"
+        styleChip(periodButton, title: currentTitle.localized, selected: false, showsChevron: true)
+        let actions = periodOptions.map { option in
+            UIAction(title: option.title.localized, state: option.key == currentPeriod ? .on : .off) { [weak self] _ in
+                self?.currentPeriod = option.key
+                self?.applySort()
+            }
+        }
+        periodButton.menu = UIMenu(children: actions)
+        periodButton.showsMenuAsPrimaryAction = true
+    }
+
+    @objc private func onSortTap(_ sender: UIButton) {
+        let option = sortOptions[sender.tag]
+        guard option.key != currentOrdering else { return }
+        currentOrdering = option.key
+        if !option.hasPeriod { currentPeriod = nil }
+        UISelectionFeedbackGenerator().selectionChanged()
+        applySort()
+    }
+
+    private func applySort() {
+        refreshSortBar()
+        errorTextLabel.isHidden = true
+        loadingData = true
+        coordinator.videos = []
+        collectionView.reloadData()
+        collectionView.setContentOffset(CGPoint(x: 0, y: -collectionView.adjustedContentInset.top), animated: false)
+        collectionView.refreshControl?.beginRefreshing()
+        coordinator.applySort(ordering: currentOrdering, period: currentPeriod)
+    }
+
     func load(){
         self.collectionView.setupView(self)
         self.tabDelegate?.setHeader()
         
         if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
-            flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 15, right: 0)
-            flowLayout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 85)
+            flowLayout.sectionInset = UIEdgeInsets(top: 0, left: 8, bottom: 15, right: 8)
+            flowLayout.minimumInteritemSpacing = 0
+            flowLayout.minimumLineSpacing = 0
+            flowLayout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 150)
             flowLayout.estimatedItemSize = CGSize(
                 width: UIScreen.main.bounds.width - 2,
                 height: 200
@@ -92,12 +202,12 @@ class HomeViewController: BaseViewController {
         searchView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
         searchView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         searchView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-        searchView.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        searchView.heightAnchor.constraint(equalToConstant: 104).isActive = true
         
         self.searchView.addSubview(searchField)
         searchField.trailingAnchor.constraint(equalTo: self.searchView.trailingAnchor, constant: -30).isActive = true
         searchField.leadingAnchor.constraint(equalTo: self.searchView.leadingAnchor, constant: 30).isActive = true
-        searchField.centerYAnchor.constraint(equalTo: self.searchView.centerYAnchor).isActive = true
+        searchField.topAnchor.constraint(equalTo: self.searchView.topAnchor, constant: 8).isActive = true
         searchField.delegate = self
         searchField.heightAnchor.constraint(equalToConstant: 40).isActive = true
         searchField.leftView?.frame = CGRect(x: 0, y: 0, width: 36, height: 20)
@@ -113,6 +223,7 @@ class HomeViewController: BaseViewController {
             searchGlass.bottomAnchor.constraint(equalTo: searchField.bottomAnchor)
         ])
         self.searchGlass = searchGlass
+        buildSortBar()
         
         let bottomRefreshController = UIRefreshControl()
         bottomRefreshController.tintColor = ColorLayout.default_text
@@ -270,5 +381,16 @@ extension HomeViewController: HomeViewDelegate {
             self.errorTextLabel.text = message
         }
 
+    }
+}
+
+// MARK: - Two-column grid
+extension HomeViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let available = collectionView.bounds.width - 16
+        if indexPath.row == 0 {
+            return CGSize(width: available, height: 66)
+        }
+        return CGSize(width: floor(available / 2), height: 250)
     }
 }
