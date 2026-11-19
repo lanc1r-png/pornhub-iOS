@@ -12,19 +12,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Probe endpoints
-        run: |
-          UA="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
-          probe() {
-            name="$1"; shift
-            out=$(curl -sS -m 25 -A "$UA" -w " [HTTP %{http_code} %{content_type} -> %{url_effective}]" "$@" 2>&1 | head -c 1800 | tr '\n\r\t' '   ' | sed 's/%/%25/g')
-            echo "::notice title=${name}::${out}"
-          }
-          probe ph_search_plain "https://www.pornhub.com/webmasters/search?page=1&thumbsize=large"
-          probe ph_search_ordering "https://www.pornhub.com/webmasters/search?page=1&ordering=mostviewed&thumbsize=large"
-          probe ph_search_cat "https://www.pornhub.com/webmasters/search?page=1&category=teen&thumbsize=large"
-          probe ph_categories "https://www.pornhub.com/webmasters/categories"
-          TOKEN=$(curl -sS -m 25 -A "$UA" https://api.redgifs.com/v2/auth/temporary | jq -r .token)
-          probe redgifs_search -H "Authorization: Bearer $TOKEN" "https://api.redgifs.com/v2/gifs/search?search_text=&order=trending&count=2&page=1"
-          probe redgifs_trending_tags -H "Authorization: Bearer $TOKEN" "https://api.redgifs.com/v2/gifs/search?order=trending&type=g&count=1"
-          probe tikporn -L --post301 --post302 --post308 -X POST "https://tik.porn/api/video/getrecommendation"
+      - uses: actions/checkout@v4
+      - name: Probe embed page
+        run: python3 .github/probe/embed.py
