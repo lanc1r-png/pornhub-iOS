@@ -124,6 +124,8 @@
 		AC0000000000000000000C03 /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A05 /* Glass.swift */; };
 		AC0000000000000000000C04 /* VideoDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A06 /* VideoDetailViewController.swift */; };
 		AC0000000000000000000C05 /* ReelOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A07 /* ReelOverlayView.swift */; };
+		AC0000000000000000000C06 /* VideoScraper.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A08 /* VideoScraper.swift */; };
+		AC0000000000000000000C07 /* ChannelViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A09 /* ChannelViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -250,6 +252,8 @@
 		AC0000000000000000000A05 /* Glass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Glass.swift; path = "ICO-Visualizer/Extensions/Glass.swift"; sourceTree = SOURCE_ROOT; };
 		AC0000000000000000000A06 /* VideoDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VideoDetailViewController.swift; path = "ICO-Visualizer/Controllers/VideoPreview/VideoDetailViewController.swift"; sourceTree = SOURCE_ROOT; };
 		AC0000000000000000000A07 /* ReelOverlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ReelOverlayView.swift; path = "ICO-Visualizer/Controllers/Cells/ReelCell/ReelOverlayView.swift"; sourceTree = SOURCE_ROOT; };
+		AC0000000000000000000A08 /* VideoScraper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = VideoScraper.swift; path = "ICO-Visualizer/Extensions/VideoScraper.swift"; sourceTree = SOURCE_ROOT; };
+		AC0000000000000000000A09 /* ChannelViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ChannelViewController.swift; path = "ICO-Visualizer/Controllers/VideoPreview/ChannelViewController.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -436,6 +440,8 @@
 		AD5BC84827329B60004898BB /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				AC0000000000000000000A09 /* ChannelViewController.swift */,
+				AC0000000000000000000A08 /* VideoScraper.swift */,
 				AC0000000000000000000A07 /* ReelOverlayView.swift */,
 				AC0000000000000000000A06 /* VideoDetailViewController.swift */,
 				AC0000000000000000000A05 /* Glass.swift */,
@@ -831,6 +837,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC0000000000000000000C07 /* ChannelViewController.swift in Sources */,
+				AC0000000000000000000C06 /* VideoScraper.swift in Sources */,
 				AC0000000000000000000C05 /* ReelOverlayView.swift in Sources */,
 				AC0000000000000000000C04 /* VideoDetailViewController.swift in Sources */,
 				AC0000000000000000000C03 /* Glass.swift in Sources */,

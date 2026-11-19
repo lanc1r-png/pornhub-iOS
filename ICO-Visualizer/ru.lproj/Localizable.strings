@@ -63,3 +63,6 @@
 "%d votes" = "голосов: %d";
 "No comments yet" = "Комментариев пока нет";
 "Could not load comments" = "Не удалось загрузить комментарии";
+"Quality" = "Качество";
+"Channel" = "Канал";
+"Auto" = "Авто";

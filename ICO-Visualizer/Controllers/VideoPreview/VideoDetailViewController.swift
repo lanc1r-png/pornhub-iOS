@@ -7,6 +7,7 @@
 
 import UIKit
 import WebKit
+import AVKit
 import SDWebImage
 import SafariServices
 
@@ -24,7 +25,7 @@ enum VideoExtras {
     static let cookie = "accessAgeDisclaimerPH=1; accessAgeDisclaimerUK=1; platform=mobile; hasVisited=1"
 
     /// Completion is called on a background queue.
-    private static func fetch(_ urlString: String, ajax: Bool = false, completion: @escaping (String?) -> Void) {
+    static func fetch(_ urlString: String, ajax: Bool = false, completion: @escaping (String?) -> Void) {
         guard let url = URL(string: urlString) else { completion(nil); return }
         var request = URLRequest(url: url, timeoutInterval: 25)
         request.setValue(userAgent, forHTTPHeaderField: "User-Agent")
@@ -73,7 +74,7 @@ enum VideoExtras {
         return result
     }
 
-    private static func clean(_ html: String) -> String {
+    static func clean(_ html: String) -> String {
         var s = html.replacingOccurrences(of: "<br\\s*/?>", with: "\n", options: .regularExpression)
         s = s.replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
         let entities = ["&amp;": "&", "&lt;": "<", "&gt;": ">", "&quot;": "\"", "&#39;": "'", "&#x27;": "'", "&nbsp;": " "]
@@ -81,7 +82,7 @@ enum VideoExtras {
         return s.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
-    private static func match(_ pattern: String, in string: String) -> String? {
+    static func match(_ pattern: String, in string: String) -> String? {
         guard let regex = try? NSRegularExpression(pattern: pattern, options: [.dotMatchesLineSeparators]),
               let m = regex.firstMatch(in: string, range: NSRange(string.startIndex..., in: string)),
               m.numberOfRanges > 1,
@@ -338,6 +339,81 @@ private final class CommentView: UIView {
 
 // MARK: - Screen
 
+private final class OwnerChip: UIControl {
+    var onTap: (() -> Void)?
+
+    init(owner: VideoOwner) {
+        super.init(frame: .zero)
+        translatesAutoresizingMaskIntoConstraints = false
+        applyCardStyle(cornerRadius: 24)
+
+        let avatar = UIView()
+        avatar.translatesAutoresizingMaskIntoConstraints = false
+        avatar.backgroundColor = ColorLayout.default_orange.withAlphaComponent(0.2)
+        avatar.layer.cornerRadius = 20
+        avatar.layer.borderWidth = 1.5
+        avatar.layer.borderColor = ColorLayout.default_orange.cgColor
+        avatar.isUserInteractionEnabled = false
+        let initial = UILabel()
+        initial.translatesAutoresizingMaskIntoConstraints = false
+        initial.text = String(owner.name.prefix(1)).uppercased()
+        initial.font = UIFont.systemFont(ofSize: 17, weight: .bold)
+        initial.textColor = ColorLayout.default_orange
+        avatar.addSubview(initial)
+
+        let name = UILabel()
+        name.text = owner.name
+        name.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        name.textColor = .white
+        let caption = UILabel()
+        let info = [owner.subscribers, owner.videosCount].compactMap { $0 }.joined(separator: " · ")
+        caption.text = info.isEmpty ? "Channel".localized : info
+        caption.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        caption.textColor = UIColor.white.withAlphaComponent(0.6)
+        let texts = UIStackView(arrangedSubviews: [name, caption])
+        texts.axis = .vertical
+        texts.spacing = 2
+        texts.translatesAutoresizingMaskIntoConstraints = false
+        texts.isUserInteractionEnabled = false
+
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right", withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)))
+        chevron.tintColor = UIColor.white.withAlphaComponent(0.5)
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.isUserInteractionEnabled = false
+
+        addSubview(avatar)
+        addSubview(texts)
+        addSubview(chevron)
+        NSLayoutConstraint.activate([
+            avatar.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+            avatar.centerYAnchor.constraint(equalTo: centerYAnchor),
+            avatar.widthAnchor.constraint(equalToConstant: 40),
+            avatar.heightAnchor.constraint(equalToConstant: 40),
+            initial.centerXAnchor.constraint(equalTo: avatar.centerXAnchor),
+            initial.centerYAnchor.constraint(equalTo: avatar.centerYAnchor),
+            texts.leadingAnchor.constraint(equalTo: avatar.trailingAnchor, constant: 12),
+            texts.trailingAnchor.constraint(lessThanOrEqualTo: chevron.leadingAnchor, constant: -8),
+            texts.centerYAnchor.constraint(equalTo: centerYAnchor),
+            chevron.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            chevron.centerYAnchor.constraint(equalTo: centerYAnchor),
+            heightAnchor.constraint(equalToConstant: 64)
+        ])
+        addTarget(self, action: #selector(tapped), for: .touchUpInside)
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    @objc private func tapped() { onTap?() }
+
+    override var isHighlighted: Bool {
+        didSet {
+            UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
+                self.transform = self.isHighlighted ? CGAffineTransform(scaleX: 0.98, y: 0.98) : .identity
+            }
+        }
+    }
+}
+
 final class VideoDetailViewController: UIViewController {
 
     static func present(from presenter: UIViewController, video: Video, delegate: TabBarViewControllerDelegate?) {
@@ -360,6 +436,16 @@ final class VideoDetailViewController: UIViewController {
     private let spinner = UIActivityIndicatorView(style: .medium)
     private var webView: WKWebView?
     private var didAppear = false
+    private var playerController: AVPlayerViewController?
+    private var nativePlayer: AVPlayer?
+    private var mediaOptions: [StreamOption] = []
+    private var currentOption: StreamOption?
+    private var statusObservation: NSKeyValueObservation?
+    private var controlObservation: NSKeyValueObservation?
+    private let qualityButton = UIButton(type: .system)
+    private var playerGeneration = 0
+    private var ownerChip: OwnerChip?
+    private var currentOwner: VideoOwner?
 
     private let titleLabel = UILabel()
     private let statsStack = UIStackView()
@@ -395,7 +481,13 @@ final class VideoDetailViewController: UIViewController {
             didAppear = true
             // Start the heavy web player only after the sheet animation has finished (keeps presentation smooth)
             loadPlayer()
+            loadOwner()
         }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        if isBeingDismissed || isMovingFromParent { teardownPlayers() }
     }
 
     // MARK: Layout
@@ -489,15 +581,16 @@ final class VideoDetailViewController: UIViewController {
         var config = Glass.buttonConfiguration()
         config.title = title
         config.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 15, weight: .semibold))
-        config.imagePadding = 6
+        config.imagePadding = 4
         config.baseForegroundColor = .white
         config.cornerStyle = .capsule
-        config.contentInsets = NSDirectionalEdgeInsets(top: 11, leading: 8, bottom: 11, trailing: 8)
+        config.contentInsets = NSDirectionalEdgeInsets(top: 11, leading: 6, bottom: 11, trailing: 6)
         config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var out = incoming
-            out.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            out.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
             return out
         }
+        config.titleLineBreakMode = .byTruncatingTail
         button.configuration = config
         button.addTarget(self, action: action, for: .touchUpInside)
         return button
@@ -510,6 +603,9 @@ final class VideoDetailViewController: UIViewController {
         relatedLoaded = false
         commentsLoaded = false
         titleLabel.text = video.title
+        ownerChip?.removeFromSuperview()
+        ownerChip = nil
+        currentOwner = nil
         refreshBookmark()
 
         statsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
@@ -588,7 +684,158 @@ final class VideoDetailViewController: UIViewController {
     // MARK: Player
 
     private func loadPlayer() {
+        guard let key = video.videoID else { spinner.stopAnimating(); return }
+        teardownPlayers()
+        playerGeneration += 1
+        let gen = playerGeneration
+        spinner.startAnimating()
+        VideoScraper.loadMedia(viewKey: key) { [weak self] options in
+            guard let self = self, gen == self.playerGeneration else { return }
+            if options.isEmpty { self.loadWebPlayer() } else { self.startNative(options) }
+        }
+    }
+
+    private func pick(from options: [StreamOption], preferred: Int) -> StreamOption {
+        let real = options.filter { $0.height > 0 }
+        guard !real.isEmpty else { return options[0] }
+        let fitting = real.filter { $0.height <= preferred }
+        return fitting.max(by: { $0.height < $1.height }) ?? real.min(by: { $0.height < $1.height })!
+    }
+
+    private func makeItem(_ url: URL) -> AVPlayerItem {
+        let headers = ["User-Agent": VideoExtras.userAgent, "Referer": "https://www.pornhub.com/"]
+        let asset = AVURLAsset(url: url, options: ["AVURLAssetHTTPHeaderFieldsKey": headers])
+        return AVPlayerItem(asset: asset)
+    }
+
+    private func startNative(_ options: [StreamOption]) {
+        mediaOptions = options
+        let saved = UserDefaults.standard.integer(forKey: "preferredQuality")
+        let option = pick(from: options, preferred: saved > 0 ? saved : 720)
+        currentOption = option
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback)
+        try? AVAudioSession.sharedInstance().setActive(true)
+
+        let item = makeItem(option.url)
+        let player = AVPlayer(playerItem: item)
+        player.automaticallyWaitsToMinimizeStalling = false
+        nativePlayer = player
+
+        let controller = AVPlayerViewController()
+        controller.player = player
+        controller.allowsPictureInPicturePlayback = true
+        controller.view.backgroundColor = .black
+        controller.view.translatesAutoresizingMaskIntoConstraints = false
+        addChild(controller)
+        playerContainer.insertSubview(controller.view, at: 0)
+        NSLayoutConstraint.activate([
+            controller.view.topAnchor.constraint(equalTo: playerContainer.topAnchor),
+            controller.view.bottomAnchor.constraint(equalTo: playerContainer.bottomAnchor),
+            controller.view.leadingAnchor.constraint(equalTo: playerContainer.leadingAnchor),
+            controller.view.trailingAnchor.constraint(equalTo: playerContainer.trailingAnchor)
+        ])
+        controller.didMove(toParent: self)
+        playerController = controller
+        installQualityButton(on: controller)
+
+        observe(item: item)
+        controlObservation = player.observe(\.timeControlStatus, options: [.new]) { [weak self] p, _ in
+            DispatchQueue.main.async {
+                switch p.timeControlStatus {
+                case .playing: self?.spinner.stopAnimating()
+                case .waitingToPlayAtSpecifiedRate: self?.spinner.startAnimating()
+                default: break
+                }
+            }
+        }
+        player.play()
+    }
+
+    private func observe(item: AVPlayerItem) {
+        statusObservation = item.observe(\.status, options: [.new]) { [weak self] item, _ in
+            DispatchQueue.main.async {
+                if item.status == .failed { self?.loadWebPlayer() }
+            }
+        }
+    }
+
+    private func installQualityButton(on controller: AVPlayerViewController) {
+        guard let overlay = controller.contentOverlayView else { return }
+        qualityButton.removeFromSuperview()
+        qualityButton.translatesAutoresizingMaskIntoConstraints = false
+        qualityButton.showsMenuAsPrimaryAction = true
+        overlay.addSubview(qualityButton)
+        NSLayoutConstraint.activate([
+            qualityButton.topAnchor.constraint(equalTo: overlay.safeAreaLayoutGuide.topAnchor, constant: 10),
+            qualityButton.trailingAnchor.constraint(equalTo: overlay.safeAreaLayoutGuide.trailingAnchor, constant: -10)
+        ])
+        refreshQualityMenu()
+    }
+
+    private func refreshQualityMenu() {
+        var config = Glass.buttonConfiguration()
+        config.title = currentOption?.label ?? "Quality".localized
+        config.image = UIImage(systemName: "chevron.down", withConfiguration: UIImage.SymbolConfiguration(pointSize: 10, weight: .bold))
+        config.imagePlacement = .trailing
+        config.imagePadding = 4
+        config.baseForegroundColor = .white
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 10)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 13, weight: .bold)
+            return out
+        }
+        qualityButton.configuration = config
+        let actions = mediaOptions.map { option in
+            UIAction(title: option.label, state: option == currentOption ? .on : .off) { [weak self] _ in self?.select(option) }
+        }
+        qualityButton.menu = UIMenu(title: "Quality".localized, children: actions)
+    }
+
+    private func select(_ option: StreamOption) {
+        guard option != currentOption, let player = nativePlayer else { return }
+        let time = player.currentTime()
+        let wasPlaying = player.timeControlStatus != .paused
+        currentOption = option
+        if option.height > 0 { UserDefaults.standard.set(option.height, forKey: "preferredQuality") }
+        let item = makeItem(option.url)
+        player.replaceCurrentItem(with: item)
+        observe(item: item)
+        if time.isValid && time.seconds > 0.5 {
+            player.seek(to: time, toleranceBefore: .zero, toleranceAfter: .zero)
+        }
+        if wasPlaying { player.play() }
+        spinner.startAnimating()
+        refreshQualityMenu()
+    }
+
+    private func teardownNative() {
+        statusObservation = nil
+        controlObservation = nil
+        nativePlayer?.pause()
+        nativePlayer?.replaceCurrentItem(with: nil)
+        nativePlayer = nil
+        qualityButton.removeFromSuperview()
+        if let controller = playerController {
+            controller.willMove(toParent: nil)
+            controller.view.removeFromSuperview()
+            controller.removeFromParent()
+        }
+        playerController = nil
+    }
+
+    private func teardownPlayers() {
+        teardownNative()
+        webView?.stopLoading()
+        webView?.removeFromSuperview()
+        webView = nil
+    }
+
+    /// Fallback: the site's own embedded player (with ad blocking).
+    private func loadWebPlayer() {
         guard let videoId = video.videoID else { spinner.stopAnimating(); return }
+        teardownNative()
         let web: WKWebView
         if let existing = webView {
             web = existing
@@ -711,6 +958,7 @@ final class VideoDetailViewController: UIViewController {
         configure()
         scrollView.setContentOffset(.zero, animated: true)
         loadPlayer()
+        loadOwner()
     }
 
     // MARK: Comments
@@ -736,6 +984,33 @@ final class VideoDetailViewController: UIViewController {
                 self.commentsLoaded = false
             }
         }
+    }
+
+    // MARK: Owner
+
+    private func loadOwner() {
+        guard let key = video.videoID else { return }
+        let gen = generation
+        VideoScraper.loadOwner(viewKey: key) { [weak self] owner in
+            guard let self = self, gen == self.generation, let owner = owner else { return }
+            self.currentOwner = owner
+            let chip = OwnerChip(owner: owner)
+            chip.onTap = { [weak self] in self?.openOwner() }
+            chip.alpha = 0
+            self.ownerChip?.removeFromSuperview()
+            if let index = self.content.arrangedSubviews.firstIndex(of: self.titleLabel) {
+                self.content.insertArrangedSubview(chip, at: index + 1)
+            }
+            self.ownerChip = chip
+            UIView.animate(withDuration: 0.25) { chip.alpha = 1 }
+        }
+    }
+
+    private func openOwner() {
+        guard let owner = currentOwner else { return }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        nativePlayer?.pause()
+        ChannelViewController.present(from: self, owner: owner, delegate: tabDelegate)
     }
 
     // MARK: Actions
