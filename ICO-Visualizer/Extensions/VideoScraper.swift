@@ -67,47 +67,85 @@ enum VideoScraper {
 
     // MARK: Streams
 
+    /// The watch page carries every quality (240p…1080p); the lightweight embed page only has 480p.
     static func loadMedia(viewKey: String, completion: @escaping ([StreamOption]) -> Void) {
-        func done(_ options: [StreamOption]) { DispatchQueue.main.async { completion(options) } }
-
-        VideoExtras.fetch("\(site)/embed/\(viewKey)") { html in
-            guard let html = html,
-                  let key = html.range(of: "\"mediaDefinitions\""),
-                  let open = html[key.upperBound...].firstIndex(of: "["),
-                  let json = bracketed(html[open...]),
-                  let list = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [[String: Any]] else {
-                done([])
-                return
+        fetchWatch(viewKey: viewKey) { html in
+            if let html = html {
+                let parsed = streams(in: html)
+                var all = parsed.found.sorted { $0.height > $1.height }
+                if all.isEmpty, let master = parsed.auto { all = [StreamOption(height: 0, url: master, isHLS: true)] }
+                if !all.isEmpty { completion(all); return }
             }
+            loadMediaFromEmbed(viewKey: viewKey, completion: completion)
+        }
+    }
 
-            var found: [StreamOption] = []
-            var autoMaster: URL?
-            var remote: URL?
+    // One watch-page download is shared by the stream list and the uploader lookup.
+    private static var watchCache: [String: String] = [:]
+    private static var watchWaiters: [String: [(String?) -> Void]] = [:]
 
-            for entry in list {
-                guard let raw = entry["videoUrl"] as? String, !raw.isEmpty else { continue }
-                let format = (entry["format"] as? String) ?? ""
-                guard let url = URL(string: raw.hasPrefix("/") ? site + raw : raw) else { continue }
-                if truthy(entry["remote"]) {
-                    if remote == nil { remote = url }
-                    continue
+    private static func fetchWatch(viewKey: String, completion: @escaping (String?) -> Void) {
+        DispatchQueue.main.async {
+            if let cached = watchCache[viewKey] { completion(cached); return }
+            if watchWaiters[viewKey] != nil { watchWaiters[viewKey]?.append(completion); return }
+            watchWaiters[viewKey] = [completion]
+            VideoExtras.fetch("\(site)/view_video.php?viewkey=\(viewKey)") { html in
+                DispatchQueue.main.async {
+                    if let html = html {
+                        if watchCache.count > 6 { watchCache.removeAll() }
+                        watchCache[viewKey] = html
+                    }
+                    let waiting = watchWaiters.removeValue(forKey: viewKey) ?? []
+                    waiting.forEach { $0(html) }
                 }
-                if let h = height(of: entry) {
+            }
+        }
+    }
+
+    /// Reads the `mediaDefinitions` list out of a page.
+    private static func streams(in html: String) -> (found: [StreamOption], auto: URL?, remote: URL?) {
+        guard let key = html.range(of: "\"mediaDefinitions\""),
+              let open = html[key.upperBound...].firstIndex(of: "["),
+              let json = bracketed(html[open...]),
+              let list = (try? JSONSerialization.jsonObject(with: Data(json.utf8))) as? [[String: Any]] else { return ([], nil, nil) }
+        var found: [StreamOption] = []
+        var auto: URL?
+        var remote: URL?
+        for entry in list {
+            guard let raw = entry["videoUrl"] as? String, !raw.isEmpty else { continue }
+            let format = (entry["format"] as? String) ?? ""
+            guard let url = URL(string: raw.hasPrefix("/") ? site + raw : raw) else { continue }
+            if truthy(entry["remote"]) {
+                if remote == nil { remote = url }
+                continue
+            }
+            if let h = height(of: entry) {
+                if let index = found.firstIndex(where: { $0.height == h }) {
+                    // Prefer HLS (starts faster, seeks cheaper) over progressive files of the same height
+                    if format == "hls" && !found[index].isHLS { found[index] = StreamOption(height: h, url: url, isHLS: true) }
+                } else {
                     found.append(StreamOption(height: h, url: url, isHLS: format == "hls"))
-                } else if format == "hls", autoMaster == nil {
-                    autoMaster = url
                 }
+            } else if format == "hls", auto == nil {
+                auto = url
             }
+        }
+        return (found, auto, remote)
+    }
 
+    private static func loadMediaFromEmbed(viewKey: String, completion: @escaping ([StreamOption]) -> Void) {
+        func done(_ options: [StreamOption]) { DispatchQueue.main.async { completion(options) } }
+        VideoExtras.fetch("\(site)/embed/\(viewKey)") { html in
+            guard let html = html else { done([]); return }
+            let parsed = streams(in: html)
             func finish(extra: [StreamOption]) {
-                var all = found
+                var all = parsed.found
                 for option in extra where !all.contains(where: { $0.height == option.height }) { all.append(option) }
                 all.sort { $0.height > $1.height }
-                if all.isEmpty, let master = autoMaster { all = [StreamOption(height: 0, url: master, isHLS: true)] }
+                if all.isEmpty, let master = parsed.auto { all = [StreamOption(height: 0, url: master, isHLS: true)] }
                 done(all)
             }
-
-            guard let remoteURL = remote else { finish(extra: []); return }
+            guard let remoteURL = parsed.remote else { finish(extra: []); return }
             VideoExtras.fetch(remoteURL.absoluteString) { body in
                 var extra: [StreamOption] = []
                 if let body = body,
@@ -158,7 +196,7 @@ enum VideoScraper {
     // MARK: Uploader
 
     static func loadOwner(viewKey: String, completion: @escaping (VideoOwner?) -> Void) {
-        VideoExtras.fetch("\(site)/view_video.php?viewkey=\(viewKey)") { html in
+        fetchWatch(viewKey: viewKey) { html in
             var owner: VideoOwner?
             if let html = html, let r = html.range(of: "userInfoContainer") {
                 let segment = String(html[r.lowerBound...].prefix(4500))
@@ -172,7 +210,7 @@ enum VideoScraper {
                                        videosCount: (count?.isEmpty ?? true) ? nil : count)
                 }
             }
-            DispatchQueue.main.async { completion(owner) }
+            completion(owner)
         }
     }
 
