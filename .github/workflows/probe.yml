@@ -1,0 +1,30 @@
+name: Probe APIs
+
+# Checks what the backends used by the app return from a GitHub runner.
+# Results are printed as annotations on the run page.
+on:
+  workflow_dispatch:
+  push:
+    paths: ['.github/probe/**']
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Probe endpoints
+        run: |
+          UA="Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148"
+          probe() {
+            name="$1"; shift
+            out=$(curl -sS -m 25 -A "$UA" -w " [HTTP %{http_code} %{content_type} -> %{url_effective}]" "$@" 2>&1 | head -c 700 | tr '\n\r\t' '   ' | sed 's/%/%25/g')
+            echo "::notice title=${name}::${out}"
+          }
+          probe ph_categories "https://www.pornhub.com/webmasters/categories"
+          probe ph_search "https://www.pornhub.com/webmasters/search?page=1&rating=80&category=teen-18-1"
+          probe ph_stars "https://www.pornhub.com/webmasters/stars_detailed"
+          probe redgifs_feed "https://api.redgifs.com/v2/home/feeds"
+          probe redgifs_auth "https://api.redgifs.com/v2/auth/temporary"
+          probe xxxtik "https://api.xxxtik.com/post/feed/by-key?cursor=0"
+          probe tikporn -X POST "https://tik.porn/api/video/getrecommendation"
+          probe pornpics "https://www.pornpics.com/search/srch.php?q=test&limit=5&offset=0"
