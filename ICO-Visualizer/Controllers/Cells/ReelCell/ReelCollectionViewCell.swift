@@ -22,6 +22,11 @@ class ReelCollectionViewCell: UICollectionViewCell {
     var playerLooper: AVPlayerLooper?
     var playerLayer:AVPlayerLayer!
     var player: AVQueuePlayer?
+    private var timeObserver: Any?
+    private weak var observedPlayer: AVQueuePlayer?
+    private let overlay = ReelOverlayView()
+    private var element: ReelElement?
+    private var overlayInstalled = false
     
     @IBOutlet weak var tagsLabel: UILabel!
     private var userUrl: URL?
@@ -56,6 +61,8 @@ class ReelCollectionViewCell: UICollectionViewCell {
     func setup(element: ReelElement, index: Int, playOnStart: Bool, isAudioOn: Bool, delegate: ReelsViewControllerDelegate){
         notContentView.isHidden = true
         self.delegate = delegate
+        self.element = element
+        installOverlay()
         guard let url = URL(string: element.videoUrl ?? "") else { return }
         sourceLabel.text = UserPreferences.shared.reelSource.rawValue
         //progressBar.isHidden = element.duration == nil
@@ -90,7 +97,9 @@ class ReelCollectionViewCell: UICollectionViewCell {
 
         self.playerView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         let playerItem = AVPlayerItem(url: url)
+        if let observer = timeObserver { observedPlayer?.removeTimeObserver(observer); timeObserver = nil }
         self.player = AVQueuePlayer(items: [playerItem])
+        observedPlayer = self.player
         self.playerLayer = AVPlayerLayer(player: self.player)
         self.playerLooper = AVPlayerLooper(player: self.player!, templateItem: playerItem)
         self.playerView.layer.addSublayer(self.playerLayer!)
@@ -107,13 +116,17 @@ class ReelCollectionViewCell: UICollectionViewCell {
         }
 
         let soundTap = UITapGestureRecognizer(target: self, action: #selector(self.switchSoundTap(_:)))
+        let doubleTap = UITapGestureRecognizer(target: self, action: #selector(self.doubleTapped(_:)))
+        doubleTap.numberOfTapsRequired = 2
+        soundTap.require(toFail: doubleTap)
         playerView.isUserInteractionEnabled = true
         playerView.addGestureRecognizer(soundTap)
+        playerView.addGestureRecognizer(doubleTap)
         
         let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(self.longPressed(_:)))
         playerView.addGestureRecognizer(longPressRecognizer)
         
-        player?.addPeriodicTimeObserver(forInterval: CMTime(value: CMTimeValue(1), timescale: 2), queue: DispatchQueue.main) {[weak self] (progressTime) in
+        timeObserver = player?.addPeriodicTimeObserver(forInterval: CMTime(value: CMTimeValue(1), timescale: 2), queue: DispatchQueue.main) {[weak self] (progressTime) in
             let currentTime = Float(CMTimeGetSeconds(progressTime))
             let progress = self?.normalize(val: currentTime, min: 0, max: Float(CMTimeGetSeconds(playerItem.duration))) ?? 0
             self?.progressBar.setProgress(progress, animated: progress == 0 ? false : true)
@@ -162,8 +175,12 @@ class ReelCollectionViewCell: UICollectionViewCell {
         likesView.textLabel.text = Double(element.likes ?? 0).shortStringRepresentation
         likesView.imageView.image = UIImage(named: "like_icon")
         
-        self.viewsView.isHidden = element.views == nil
-        self.likesView.isHidden = element.likes == nil
+        self.viewsView.isHidden = true
+        self.likesView.isHidden = true
+        for legacy in [userAvatarView, usernameLabel, tagsLabel, sourceLabel, verifiedIcon] as [UIView?] { legacy?.isHidden = true }
+        progressBar.progressTintColor = .white
+        progressBar.trackTintColor = UIColor.white.withAlphaComponent(0.2)
+        overlay.configure(username: element.username, avatarURL: URL(string: element.avatarUrl ?? ""), verified: element.verified ?? false, tags: element.tags, likes: element.likes, views: element.views, source: UserPreferences.shared.reelSource.rawValue, isAudioOn: UserPreferences.shared.isAudioOn)
         
     }
     
@@ -191,8 +208,57 @@ class ReelCollectionViewCell: UICollectionViewCell {
         }
     }
     
+    /// TikTok-style: a tap pauses / resumes the video.
     @objc func switchSoundTap(_ sender: UITapGestureRecognizer? = nil) {
-        self.delegate?.switchSound()
+        guard let player = self.player else { return }
+        if player.timeControlStatus == .paused {
+            player.play()
+            overlay.setPaused(false)
+        } else {
+            player.pause()
+            overlay.setPaused(true)
+        }
+    }
+
+    @objc func doubleTapped(_ sender: UITapGestureRecognizer) {
+        overlay.showHeartBurst(at: sender.location(in: overlay))
+    }
+
+    private func installOverlay() {
+        guard !overlayInstalled else { return }
+        overlayInstalled = true
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        contentView.insertSubview(overlay, belowSubview: notContentView)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            overlay.topAnchor.constraint(equalTo: contentView.topAnchor),
+            overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+        ])
+        overlay.onProfile = { [weak self] in self?.handleTap(nil) }
+        overlay.onMute = { [weak self] in
+            self?.delegate?.switchSound()
+            self?.overlay.updateAudio(isOn: UserPreferences.shared.isAudioOn)
+        }
+        overlay.onShare = { [weak self] in self?.shareCurrent() }
+    }
+
+    private func shareCurrent() {
+        guard let element = element else { return }
+        let link = element.externalUrl ?? element.videoUrl ?? ""
+        guard let url = URL(string: link) else { return }
+        var responder: UIResponder? = self
+        while let next = responder?.next, !(next is UIViewController) { responder = next }
+        guard let controller = responder?.next as? UIViewController else { return }
+        let activity = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+        activity.popoverPresentationController?.sourceView = overlay
+        controller.present(activity, animated: true)
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        if let observer = timeObserver { observedPlayer?.removeTimeObserver(observer); timeObserver = nil }
+        player?.pause()
     }
     
 }

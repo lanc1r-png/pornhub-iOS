@@ -49,3 +49,17 @@
 "All Time" = "За всё время";
 "This Week" = "За неделю";
 "This Month" = "За месяц";
+"Details" = "Детали";
+"Related" = "Похожее";
+"Comments" = "Комментарии";
+"Bookmark" = "Закладка";
+"Share" = "Поделиться";
+"Open on Site" = "На сайте";
+"Views" = "Просмотры";
+"Rating" = "Рейтинг";
+"Duration" = "Длина";
+"Tags" = "Теги";
+"Published %@" = "Опубликовано %@";
+"%d votes" = "голосов: %d";
+"No comments yet" = "Комментариев пока нет";
+"Could not load comments" = "Не удалось загрузить комментарии";

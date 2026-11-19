@@ -42,6 +42,14 @@ enum Glass {
         return view
     }
 
+    /// Button configuration: native glass buttons on iOS 26+, tinted gray buttons before.
+    static func buttonConfiguration(prominent: Bool = false) -> UIButton.Configuration {
+        if #available(iOS 26.0, *) {
+            return prominent ? UIButton.Configuration.prominentGlass() : UIButton.Configuration.glass()
+        }
+        return prominent ? UIButton.Configuration.filled() : UIButton.Configuration.gray()
+    }
+
     /// Pre-iOS 26 fallback has no glass shape of its own: keep capsules round after layout.
     static func roundCapsuleIfNeeded(_ view: UIVisualEffectView?) {
         guard let view = view, view.effect is UIBlurEffect else { return }

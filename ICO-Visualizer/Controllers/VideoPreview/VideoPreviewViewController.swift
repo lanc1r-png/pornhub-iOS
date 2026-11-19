@@ -56,17 +56,7 @@ enum PlayerAdBlock {
 class VideoPreviewViewController: UIViewController {
     
     static func present(fromView: UIViewController, video: Video, delegate: TabBarViewControllerDelegate?){
-        let vc1 = VideoPreviewViewController()
-        vc1.video = video
-        vc1.delegate = delegate
-        if UIDevice.current.userInterfaceIdiom == .pad {
-            fromView.present(vc1, animated: true, completion: nil)
-        }
-        else{
-            let vc = CustomActivityViewController(controller: vc1)
-            fromView.present(vc, animated: true, completion: nil)
-        }
-
+        VideoDetailViewController.present(from: fromView, video: video, delegate: delegate)
     }
     
     public var video: Video!
