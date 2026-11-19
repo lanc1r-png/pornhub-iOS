@@ -9,6 +9,50 @@
 import UIKit
 import WebKit
 
+/// Blocks the player's pre-roll ad requests (ad config endpoint + ad network hosts).
+enum PlayerAdBlock {
+    private static let identifier = "ico-player-adblock"
+    private static var cached: WKContentRuleList?
+
+    private static let hosts = [
+        "trafficjunky\\.net", "trafficjunky\\.com", "exoclick\\.com", "exosrv\\.com", "juicyads\\.com",
+        "realsrv\\.com", "magsrv\\.com", "tsyndicate\\.com", "popads\\.net", "adsterra", "clickadu\\.com",
+        "doubleclick\\.net", "googlesyndication\\.com", "adnxs\\.com"
+    ]
+    private static let paths = ["pornhub\\.com/_xa/ads", "pornhub\\.com/_xa/ad_", "/ads\\?.*preroll"]
+
+    private static var json: String {
+        let filters = hosts + paths
+        let rules = filters.map { filter -> String in
+            // Regex backslashes must be escaped once more inside the JSON string
+            let escaped = filter.replacingOccurrences(of: "\\", with: "\\\\")
+            return #"{"trigger":{"url-filter":"\#(escaped)"},"action":{"type":"block"}}"#
+        }
+        // Hide leftover ad overlays inside the player
+        let css = #"{"trigger":{"url-filter":".*"},"action":{"type":"css-display-none","selector":".mgp_adContainer, .mgp_adVideo, .mgp_adOverlay, [class*='adContainer'], [id*='preroll']"}}"#
+        return "[" + (rules + [css]).joined(separator: ",") + "]"
+    }
+
+    static func install(on webView: WKWebView, completion: @escaping () -> Void) {
+        if let list = cached {
+            webView.configuration.userContentController.add(list)
+            completion()
+            return
+        }
+        WKContentRuleListStore.default().compileContentRuleList(forIdentifier: identifier, encodedContentRuleList: json) { list, error in
+            DispatchQueue.main.async {
+                if let list = list {
+                    cached = list
+                    webView.configuration.userContentController.add(list)
+                } else if let error = error {
+                    print("Ad block rules failed: \(error)")
+                }
+                completion()
+            }
+        }
+    }
+}
+
 class VideoPreviewViewController: UIViewController {
     
     static func present(fromView: UIViewController, video: Video, delegate: TabBarViewControllerDelegate?){
@@ -221,7 +265,10 @@ class VideoPreviewViewController: UIViewController {
             let html = """
                         <iframe src="https://www.pornhub.com/embed/\(videoId)" frameborder="0" width="100%" height="100%" scrolling="no" allowfullscreen></iframe>
                         """
-            videoPlayer.loadHTMLString(html, baseURL: nil)
+            // Install the ad-blocking rules first, then load the player
+            PlayerAdBlock.install(on: videoPlayer) { [weak self] in
+                self?.videoPlayer.loadHTMLString(html, baseURL: nil)
+            }
         }
 
         titleLabel.text = video.title
