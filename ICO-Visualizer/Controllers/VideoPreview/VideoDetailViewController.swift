@@ -185,7 +185,7 @@ private final class StatTile: UIView {
         valueLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 17, weight: .bold)
         valueLabel.textColor = .white
         valueLabel.textAlignment = .center
-        valueLabel.adjustsFontSizeToFit = true
+        valueLabel.adjustsFontSizeToFitWidth = true
         valueLabel.minimumScaleFactor = 0.7
         let captionLabel = UILabel()
         captionLabel.text = caption
