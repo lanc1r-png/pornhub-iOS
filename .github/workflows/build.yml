@@ -59,6 +59,13 @@ jobs:
           name: ICO-Visualizer-ipa
           path: ICO-Visualizer.ipa
 
+      - name: Surface compiler errors as annotations
+        if: failure()
+        run: |
+          grep -E "error:|fatal error|Command .* failed|BUILD FAILED" build.log | sed 's#/Users/runner/work/[^/]*/[^/]*/##' | awk '!seen[$0]++' | head -n 9 | while IFS= read -r line; do
+            echo "::error::${line:0:900}"
+          done
+
       - name: Upload build log
         if: failure()
         uses: actions/upload-artifact@v4
