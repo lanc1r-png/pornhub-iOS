@@ -46,7 +46,7 @@ extension IconSelectionViewController: UICollectionViewDelegate, UICollectionVie
             return UICollectionReusableView()
 
         default:
-            assert(false, "Unexpected element kind")
+            fatalError("Unexpected element kind")
         }
     }
     

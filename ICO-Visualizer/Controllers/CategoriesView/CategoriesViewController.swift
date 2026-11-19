@@ -124,7 +124,7 @@ extension CategoriesViewController: UICollectionViewDelegate, UICollectionViewDa
             return UICollectionReusableView()
 
         default:
-            assert(false, "Unexpected element kind")
+            fatalError("Unexpected element kind")
         }
     }
     

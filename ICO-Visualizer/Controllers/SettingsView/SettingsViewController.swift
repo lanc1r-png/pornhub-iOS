@@ -44,7 +44,7 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
             return UICollectionReusableView()
 
         default:
-            assert(false, "Unexpected element kind")
+            fatalError("Unexpected element kind")
         }
     }
     

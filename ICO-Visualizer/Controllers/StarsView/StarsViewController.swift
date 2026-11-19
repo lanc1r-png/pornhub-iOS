@@ -158,7 +158,7 @@ extension StarsViewController: UICollectionViewDelegate, UICollectionViewDataSou
             return UICollectionReusableView()
 
         default:
-            assert(false, "Unexpected element kind")
+            fatalError("Unexpected element kind")
         }
     }
     

@@ -81,7 +81,7 @@ extension BookmarksViewController: UICollectionViewDelegate, UICollectionViewDat
             return UICollectionReusableView()
 
         default:
-            assert(false, "Unexpected element kind")
+            fatalError("Unexpected element kind")
         }
     }
     
