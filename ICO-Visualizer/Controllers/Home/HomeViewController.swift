@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SDWebImage
 import CCBottomRefreshControl
 
 class HomeViewController: BaseViewController {
@@ -184,6 +185,7 @@ class HomeViewController: BaseViewController {
 
     func load(){
         self.collectionView.setupView(self)
+        self.collectionView.prefetchDataSource = self
         self.tabDelegate?.setHeader()
         
         if let flowLayout = collectionView.collectionViewLayout as? UICollectionViewFlowLayout {
@@ -392,5 +394,17 @@ extension HomeViewController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: available, height: 66)
         }
         return CGSize(width: floor(available / 2), height: 250)
+    }
+}
+
+
+extension HomeViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        let urls: [URL] = indexPaths.compactMap { path in
+            let i = path.row - 1
+            guard i >= 0, i < coordinator.videos.count, let t = coordinator.videos[i].thumb else { return nil }
+            return URL(string: t)
+        }
+        SDWebImagePrefetcher.shared.prefetchURLs(urls)
     }
 }

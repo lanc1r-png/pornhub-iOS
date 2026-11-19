@@ -92,13 +92,12 @@ class ReelCollectionViewCell: UICollectionViewCell {
 
         
         self.index = index
-        let avPlayer = AVPlayer(url: url);
-        avPlayer.volume = 0
-
         self.playerView.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
         let playerItem = AVPlayerItem(url: url)
+        playerItem.preferredForwardBufferDuration = 4
         if let observer = timeObserver { observedPlayer?.removeTimeObserver(observer); timeObserver = nil }
         self.player = AVQueuePlayer(items: [playerItem])
+        self.player?.automaticallyWaitsToMinimizeStalling = false
         observedPlayer = self.player
         self.playerLayer = AVPlayerLayer(player: self.player)
         self.playerLooper = AVPlayerLooper(player: self.player!, templateItem: playerItem)

@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import SDWebImage
 import AVFoundation
 import AlamofireNetworkActivityLogger
 
@@ -16,6 +17,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     private var audioLevel : Float = 0.0
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        SDImageCache.shared.config.maxMemoryCost = 150 * 1024 * 1024
+        SDImageCache.shared.config.shouldCacheImagesInMemory = true
+        SDWebImageDownloader.shared.config.maxConcurrentDownloads = 10
+        SDWebImageDownloader.shared.config.downloadTimeout = 20
+        SDWebImageDownloader.shared.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
+        SDWebImageDownloader.shared.setValue("https://www.pornhub.com/", forHTTPHeaderField: "Referer")
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback)
             try AVAudioSession.sharedInstance().setActive(true, options: [])

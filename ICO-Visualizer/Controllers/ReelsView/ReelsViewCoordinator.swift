@@ -40,7 +40,7 @@ class ReelsViewCoordinator {
                 }
                 var result: [ReelElement] = []
                 for gif in response.gifs ?? [] {
-                    guard let url = gif.urls?.hd ?? gif.urls?.sd, URL(string: url) != nil else { continue }
+                    guard let url = gif.urls?.sd ?? gif.urls?.hd, URL(string: url) != nil else { continue }
                     let user = users[(gif.userName ?? "").lowercased()]
                     let profile = user?.profileUrl ?? gif.userName.map { "https://www.redgifs.com/users/\($0)" }
                     result.append(ReelElement(videoUrl: url, username: gif.userName, avatarUrl: user?.profileImageUrl, likes: gif.likes?.int, views: gif.views?.int, tags: gif.tags, verified: gif.verified, externalUrl: profile, duration: gif.duration?.int, width: gif.width?.int, height: gif.height?.int))

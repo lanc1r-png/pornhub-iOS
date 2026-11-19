@@ -180,8 +180,8 @@ extension ReelsViewController: UICollectionViewDelegate, UICollectionViewDataSou
                 }
             }
         }
-        let lastElement = self.coordinator.videos.count - 2
-        if !loadingData && self.currentPage == lastElement {
+        let lastElement = self.coordinator.videos.count - 4
+        if !loadingData && self.currentPage >= lastElement {
             collectionView.bottomRefreshControl?.beginRefreshing()
             loadingData = true
             self.coordinator.loadMore()
@@ -208,11 +208,9 @@ extension ReelsViewController: ReelsViewControllerDelegate {
         loadingData = false
         refreshControl.endRefreshing()
         collectionView.bottomRefreshControl?.endRefreshing()
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: {
-            self.collectionView.performBatchUpdates {
-                self.collectionView.insertItems(at: newIndexs)
-            }
-        })
+        self.collectionView.performBatchUpdates {
+            self.collectionView.insertItems(at: newIndexs)
+        }
     }
     
     func openUrl(url: URL) {

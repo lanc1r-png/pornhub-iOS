@@ -52,7 +52,7 @@ final class ReelOverlayView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
-        bottomGradient.frame = CGRect(x: 0, y: bounds.height - 320, width: bounds.width, height: 320)
+        bottomGradient.frame = CGRect(x: 0, y: bounds.height - 400, width: bounds.width, height: 400)
         topGradient.frame = CGRect(x: 0, y: 0, width: bounds.width, height: 160)
         avatarView.layer.cornerRadius = avatarView.bounds.width / 2
         for glass in glassViews + [playGlass] { Glass.roundCapsuleIfNeeded(glass) }
@@ -123,7 +123,7 @@ final class ReelOverlayView: UIView {
 
         // Action rail (right)
         rail.axis = .vertical
-        rail.spacing = 18
+        rail.spacing = 12
         rail.alignment = .center
         rail.translatesAutoresizingMaskIntoConstraints = false
         addSubview(rail)
@@ -148,10 +148,10 @@ final class ReelOverlayView: UIView {
             avatarView.widthAnchor.constraint(equalToConstant: 44),
             avatarView.heightAnchor.constraint(equalToConstant: 44),
             info.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
-            info.trailingAnchor.constraint(equalTo: rail.leadingAnchor, constant: -14),
-            info.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -28),
-            rail.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
-            rail.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -28),
+            info.trailingAnchor.constraint(equalTo: rail.leadingAnchor, constant: -10),
+            info.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -118),
+            rail.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -4),
+            rail.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -118),
             playGlass.centerXAnchor.constraint(equalTo: centerXAnchor),
             playGlass.centerYAnchor.constraint(equalTo: centerYAnchor),
             playGlass.widthAnchor.constraint(equalToConstant: 88),
@@ -168,14 +168,14 @@ final class ReelOverlayView: UIView {
         glass.isUserInteractionEnabled = false
         glassViews.append(glass)
         circle.addSubview(glass)
-        icon.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .semibold))
+        icon.image = UIImage(systemName: symbol, withConfiguration: UIImage.SymbolConfiguration(pointSize: 19, weight: .semibold))
         icon.tintColor = .white
         icon.contentMode = .scaleAspectFit
         icon.translatesAutoresizingMaskIntoConstraints = false
         circle.addSubview(icon)
         NSLayoutConstraint.activate([
-            circle.widthAnchor.constraint(equalToConstant: 52),
-            circle.heightAnchor.constraint(equalToConstant: 52),
+            circle.widthAnchor.constraint(equalToConstant: 44),
+            circle.heightAnchor.constraint(equalToConstant: 44),
             glass.leadingAnchor.constraint(equalTo: circle.leadingAnchor),
             glass.trailingAnchor.constraint(equalTo: circle.trailingAnchor),
             glass.topAnchor.constraint(equalTo: circle.topAnchor),

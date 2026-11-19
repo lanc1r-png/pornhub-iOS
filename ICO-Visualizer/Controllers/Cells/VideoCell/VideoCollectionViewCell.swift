@@ -57,8 +57,19 @@ class VideoCollectionViewCell: FullWidthCollectionViewCell {
     }
 
     func setup(video: Video){
-        if let thumbUrl = video.thumb{
-            thumbImageView.sd_setImage(with: URL(string: thumbUrl)!, completed: nil)
+        if let thumbUrl = video.thumb ?? video.defaultThumb, let url = URL(string: thumbUrl) {
+            thumbImageView.sd_imageIndicator = nil
+            thumbImageView.sd_setImage(with: url, placeholderImage: nil, options: [.retryFailed, .scaleDownLargeImages, .highPriority, .avoidAutoSetImage], completed: { [weak self] image, _, cacheType, _ in
+                guard let self = self, let image = image else { return }
+                if cacheType == .none {
+                    UIView.transition(with: self.thumbImageView, duration: 0.2, options: .transitionCrossDissolve, animations: { self.thumbImageView.image = image })
+                } else {
+                    self.thumbImageView.image = image
+                }
+            })
+        } else {
+            thumbImageView.sd_cancelCurrentImageLoad()
+            thumbImageView.image = nil
         }
         titleLabel.text = video.title
         viewsLabel.text = ""
