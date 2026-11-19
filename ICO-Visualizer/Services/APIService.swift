@@ -26,6 +26,18 @@ class APIService {
     private let searchImagesUrl = "https://www.pornpics.com/search/srch.php"
     
     
+    /// When a server answers with something that is not JSON (block page, age gate, captcha...),
+    /// show the HTTP status and the beginning of the body instead of a cryptic serializer error.
+    static func describe(_ error: Error, data: Data?, response: HTTPURLResponse?) -> Error {
+        guard error is AFError, let data = data, !data.isEmpty else { return error }
+        let status = response?.statusCode ?? 0
+        let host = response?.url?.host ?? ""
+        let body = String(decoding: data.prefix(200), as: UTF8.self)
+            .replacingOccurrences(of: "\n", with: " ")
+            .replacingOccurrences(of: "\r", with: " ")
+        return NSError(domain: "ICO", code: status, userInfo: [NSLocalizedDescriptionKey: "HTTP \(status) \(host)\n\(body)"])
+    }
+
     private var retryCount: Int = 0
     private let maxRetry: Int = 3
     
@@ -44,7 +56,7 @@ class APIService {
         }
         AF.request(url, method: .get, parameters: parameters).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -72,7 +84,7 @@ class APIService {
         let parameters: Parameters = ["offset": 1, "limit": 30]
         AF.request(url, method: .get, parameters: parameters).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -99,7 +111,7 @@ class APIService {
         let url = "\(self.baseUrl)/categories"
         AF.request(url, method: .get).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -132,7 +144,7 @@ class APIService {
         let url = "\(self.baseUrl)/stars_detailed"
         AF.request(url, method: .get).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -182,7 +194,7 @@ class APIService {
         let parameters: Parameters = [ "id" : id ]
         AF.request(url, method: .get, parameters: parameters).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -252,7 +264,7 @@ class APIService {
     func fetchFeeds(completionHandler: ((Result<FeedsResponse, Error>) -> Void)?){
         AF.request(self.feedsUrl, method: .get).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{
@@ -275,7 +287,7 @@ class APIService {
         let params: Parameters = ["cursor": cursor]
         AF.request(self.tikUrl, method: .get, parameters: params).responseJSON { result in
             if let error = result.error{
-                completionHandler?(.failure(error))
+                completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
                 return
             }
             if let data = result.data{

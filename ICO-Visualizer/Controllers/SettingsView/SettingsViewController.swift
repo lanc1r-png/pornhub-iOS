@@ -53,10 +53,6 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let faceIdToggle = collectionView.dequeueReusableCell(withReuseIdentifier: ToggleCollectionViewCell.className, for: indexPath) as! ToggleCollectionViewCell
-        faceIdToggle.setup(title: "Face ID".localized, isOn: UserPreferences.shared.faceIdEnabled) { isOn in
-            UserPreferences.shared.faceIdEnabled = isOn
-        }
         if indexPath.row == 1{
             let iconSelectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
             iconSelectionCell.setup(title: "Select App Icon".localized) {
@@ -81,6 +77,11 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
                 self.navigationController?.pushViewController(pinVc, animated: true)
             }
             return iconSelectionCell
+        }
+        // Dequeue exactly one cell per index path (dequeuing two crashes on modern iOS).
+        let faceIdToggle = collectionView.dequeueReusableCell(withReuseIdentifier: ToggleCollectionViewCell.className, for: indexPath) as! ToggleCollectionViewCell
+        faceIdToggle.setup(title: "Face ID".localized, isOn: UserPreferences.shared.faceIdEnabled) { isOn in
+            UserPreferences.shared.faceIdEnabled = isOn
         }
         return faceIdToggle
     }

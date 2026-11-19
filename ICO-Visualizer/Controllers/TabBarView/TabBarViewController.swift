@@ -50,20 +50,19 @@ class TabBarViewController: UIViewController {
     }
 
     /// Builds a glass surface: real Liquid Glass on iOS 26+/27, a blur material on older systems.
-    private func makeGlassView(tint: UIColor? = nil, interactive: Bool = false) -> UIVisualEffectView {
+    private func makeGlassView(tint: UIColor? = nil, interactive: Bool = false, fallbackFill: UIColor? = nil) -> UIVisualEffectView {
         let view: UIVisualEffectView
         if #available(iOS 26.0, *) {
             let glass = UIGlassEffect(style: .regular)
             glass.tintColor = tint
             glass.isInteractive = interactive
             view = UIVisualEffectView(effect: glass)
+            view.cornerConfiguration = .capsule()
         } else {
             view = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialDark))
             view.clipsToBounds = true
             view.layer.cornerCurve = .continuous
-            if let tint = tint {
-                view.contentView.backgroundColor = tint.withAlphaComponent(0.18)
-            }
+            view.contentView.backgroundColor = fallbackFill ?? tint?.withAlphaComponent(0.18)
         }
         view.translatesAutoresizingMaskIntoConstraints = false
         view.isUserInteractionEnabled = false
@@ -83,16 +82,29 @@ class TabBarViewController: UIViewController {
             pill.leadingAnchor.constraint(equalTo: tabBarContainer.leadingAnchor, constant: 16),
             pill.trailingAnchor.constraint(equalTo: tabBarContainer.trailingAnchor, constant: -16),
             pill.centerYAnchor.constraint(equalTo: tabBarContainer.centerYAnchor),
-            pill.heightAnchor.constraint(equalToConstant: 56)
+            pill.heightAnchor.constraint(equalToConstant: 62)
         ])
         tabGlassView = pill
 
         // Selection highlight (orange-tinted glass) that slides between tabs
-        let indicator = makeGlassView(tint: ColorLayout.default_orange.withAlphaComponent(0.55))
+        let indicator = makeGlassView(fallbackFill: UIColor.white.withAlphaComponent(0.14))
         indicator.frame = .zero
         indicator.translatesAutoresizingMaskIntoConstraints = true
         tabBarContainer.insertSubview(indicator, aboveSubview: pill)
         tabIndicatorView = indicator
+
+        // Modern SF Symbols instead of the old flat PNG icons
+        let symbols = ["house.fill", "bookmark.fill", "star.fill", "play.square.stack.fill"]
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 21, weight: .semibold)
+        for (i, item) in (tabItems ?? []).enumerated() where i < symbols.count {
+            var cfg = item.configuration ?? UIButton.Configuration.plain()
+            cfg.image = UIImage(systemName: symbols[i], withConfiguration: symbolConfig)
+            item.configuration = cfg
+        }
+        var settingsCfg = settingsButton.configuration ?? UIButton.Configuration.plain()
+        settingsCfg.image = UIImage(systemName: "gearshape.fill", withConfiguration: UIImage.SymbolConfiguration(pointSize: 18, weight: .semibold))
+        settingsButton.configuration = settingsCfg
+        settingsButton.tintColor = UIColor.white.withAlphaComponent(0.85)
 
         // Glass settings button
         let settingsGlass = makeGlassView(interactive: true)
@@ -113,8 +125,8 @@ class TabBarViewController: UIViewController {
               let items = tabItems, selectedIndex < items.count else { return }
         tabBarContainer.layoutIfNeeded()
         let target = items[selectedIndex].convert(items[selectedIndex].bounds, to: tabBarContainer)
-            .insetBy(dx: 6, dy: 0)
-        let frame = CGRect(x: target.minX, y: tabBarContainer.bounds.midY - 22, width: target.width, height: 44)
+            .insetBy(dx: 2, dy: 0)
+        let frame = CGRect(x: target.minX, y: tabBarContainer.bounds.midY - 25, width: target.width, height: 50)
         guard indicator.frame != frame else { return }
         if animated {
             UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0.4, options: [.allowUserInteraction, .beginFromCurrentState]) {
@@ -152,7 +164,7 @@ class TabBarViewController: UIViewController {
         
         for item in tabItems! {
             item.setTitle("", for: .normal)
-            item.tintColor = ColorLayout.default_grey
+            item.tintColor = UIColor.white.withAlphaComponent(0.6)
         }
         self.tabItems![index].tintColor = ColorLayout.default_orange
         settingsButton.setTitle("", for: .normal)
