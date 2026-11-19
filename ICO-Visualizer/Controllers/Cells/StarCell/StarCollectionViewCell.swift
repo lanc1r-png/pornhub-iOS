@@ -34,8 +34,11 @@ class StarCollectionViewCell: UICollectionViewCell {
     }
 
     func setup(star: Star){
-        if let thumbUrl = star.starThumb{
-            thumbImageView.sd_setImage(with: URL(string: thumbUrl)!, completed: nil)
+        if let thumbUrl = star.starThumb, let url = URL(string: thumbUrl) {
+            thumbImageView.sd_setImage(with: url, placeholderImage: nil, options: [.retryFailed, .scaleDownLargeImages], completed: nil)
+        } else {
+            thumbImageView.sd_cancelCurrentImageLoad()
+            thumbImageView.image = nil
         }
         titleLabel.text = star.starName
         bookmarkIcon.isHidden = !UserBookmakrs.shared.checkStarBookmarksCointain(star)

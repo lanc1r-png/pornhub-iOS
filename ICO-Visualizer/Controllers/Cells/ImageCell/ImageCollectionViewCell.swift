@@ -14,6 +14,6 @@ class ImageCollectionViewCell: UICollectionViewCell {
     
     func setup(imageUrl: String){
         self.imageView.clipsToBounds = true
-        self.imageView.sd_setImage(with: URL(string: imageUrl)!, completed: nil)
+        self.imageView.sd_setImage(with: URL(string: imageUrl), placeholderImage: nil, options: [.retryFailed, .scaleDownLargeImages], completed: nil)
     }
 }

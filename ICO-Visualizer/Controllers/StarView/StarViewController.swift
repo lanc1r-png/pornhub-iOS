@@ -107,8 +107,8 @@ class StarViewController: BaseViewController {
         coordinator = StarViewCoordinator(self)
         self.setupView()
         
-        if let imageUrl = self.coordinator.star.starThumb {
-            self.starImage.sd_setImage(with: URL(string: imageUrl)!, completed: {image,_,_,_ in
+        if let imageUrl = self.coordinator.star.starThumb, let starURL = URL(string: imageUrl) {
+            self.starImage.sd_setImage(with: starURL, completed: {image,_,_,_ in
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     self.starImage.setShadowAndCorner(cornerRadius: self.starImage.frame.width / 2)
                     self.starImage.isUserInteractionEnabled = true
@@ -351,7 +351,7 @@ extension StarViewController: UICollectionViewDelegate, UICollectionViewDataSour
         if collectionView == self.photosCollectionView {
             let imageCell = collectionView.dequeueReusableCell(withReuseIdentifier: ImageCollectionViewCell.className, for: indexPath) as! ImageCollectionViewCell
             imageCell.setup(imageUrl: self.coordinator.images[indexPath.row - 1])
-            imageCell.imageView.setupImageViewer(urls: self.coordinator.images.map({ URL(string: $0)! }), initialIndex: indexPath.row - 1, options: [.theme(.dark), .closeIcon(UIImage(named: "close_icon")!)])
+            imageCell.imageView.setupImageViewer(urls: self.coordinator.images.compactMap({ URL(string: $0) }), initialIndex: indexPath.row - 1, options: [.theme(.dark), .closeIcon(UIImage(named: "close_icon")!)])
             return imageCell
         }
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: VideoCollectionViewCell.className, for: indexPath) as! VideoCollectionViewCell

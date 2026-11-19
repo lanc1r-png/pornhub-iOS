@@ -84,12 +84,5 @@ class VideoCollectionViewCell: FullWidthCollectionViewCell {
         self.starLabel.text = video.pornstars?.first?.pornstarName ?? ""
         self.durationLabel.text = video.duration ?? ""
         bookmarkIcon.isHidden = !UserBookmakrs.shared.checkVideoBookmarksCointain(video)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.gradient.frame = self.gradientView.bounds
-            self.gradient.colors = [UIColor.clear.cgColor, UIColor.black.cgColor]
-
-            self.gradientView.layer.insertSublayer(self.gradient, at: 0)
-        }
     }
 }

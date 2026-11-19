@@ -138,7 +138,7 @@ class ReelCollectionViewCell: UICollectionViewCell {
             self.userAvatarView.layer.cornerRadius = self.userAvatarView.frame.width / 2
             self.userAvatarView.layer.borderWidth = 1
             self.userAvatarView.layer.borderColor = UIColor.white.cgColor
-            self.playerLayer?.frame = self.playerView.frame
+            self.playerLayer?.frame = self.playerView.bounds
             self.bringSubviewToFront(self.userAvatarView)
             self.bringSubviewToFront(self.notContentView)
             self.usernameLabel.isUserInteractionEnabled = true
@@ -160,20 +160,6 @@ class ReelCollectionViewCell: UICollectionViewCell {
             }
         }
 
-        self.contentView.addSubview(self.viewsView)
-        viewsView.bottomAnchor.constraint(equalTo: self.userAvatarView.topAnchor, constant: -24).isActive = true
-        viewsView.centerXAnchor.constraint(equalTo: self.userAvatarView.centerXAnchor).isActive = true
-        viewsView.widthAnchor.constraint(equalToConstant: self.userAvatarView.frame.width - 12).isActive = true
-        viewsView.textLabel.text = Double(element.views ?? 0).shortStringRepresentation
-        viewsView.imageView.image = UIImage(named: "views_icon")
-        
-        self.contentView.addSubview(self.likesView)
-        likesView.bottomAnchor.constraint(equalTo: self.viewsView.topAnchor, constant: -24).isActive = true
-        likesView.centerXAnchor.constraint(equalTo: self.userAvatarView.centerXAnchor).isActive = true
-        likesView.widthAnchor.constraint(equalToConstant: self.userAvatarView.frame.width - 12).isActive = true
-        likesView.textLabel.text = Double(element.likes ?? 0).shortStringRepresentation
-        likesView.imageView.image = UIImage(named: "like_icon")
-        
         self.viewsView.isHidden = true
         self.likesView.isHidden = true
         for legacy in [userAvatarView, usernameLabel, tagsLabel, sourceLabel, verifiedIcon] as [UIView?] { legacy?.isHidden = true }
@@ -226,14 +212,11 @@ class ReelCollectionViewCell: UICollectionViewCell {
     private func installOverlay() {
         guard !overlayInstalled else { return }
         overlayInstalled = true
-        overlay.translatesAutoresizingMaskIntoConstraints = false
+        // Frame-based: the overlay always matches the cell's real bounds, whatever the cell's layout pass did
+        overlay.translatesAutoresizingMaskIntoConstraints = true
+        overlay.frame = contentView.bounds
+        overlay.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         contentView.insertSubview(overlay, belowSubview: notContentView)
-        NSLayoutConstraint.activate([
-            overlay.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            overlay.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            overlay.topAnchor.constraint(equalTo: contentView.topAnchor),
-            overlay.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
-        ])
         overlay.onProfile = { [weak self] in self?.handleTap(nil) }
         overlay.onMute = { [weak self] in
             self?.delegate?.switchSound()
@@ -252,6 +235,15 @@ class ReelCollectionViewCell: UICollectionViewCell {
         let activity = UIActivityViewController(activityItems: [url], applicationActivities: nil)
         activity.popoverPresentationController?.sourceView = overlay
         controller.present(activity, animated: true)
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        overlay.frame = contentView.bounds
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        playerLayer?.frame = playerView.bounds
+        CATransaction.commit()
     }
 
     override func prepareForReuse() {

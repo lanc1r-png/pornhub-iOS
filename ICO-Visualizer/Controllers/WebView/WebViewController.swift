@@ -61,8 +61,7 @@ class WebViewController: UIViewController {
         webView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         webView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         
-        let url = URL(string: url)!
-        webView.load(URLRequest(url: url))
+        if let target = URL(string: url) { webView.load(URLRequest(url: target)) }
         self.titleLabel.text = self.titleText
     }
     
