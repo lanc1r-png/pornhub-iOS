@@ -76,10 +76,10 @@
                                 </subviews>
                                 <color key="backgroundColor" name="default_tab_background"/>
                                 <constraints>
-                                    <constraint firstItem="fYj-eR-QJk" firstAttribute="leading" secondItem="Jrg-6b-wYq" secondAttribute="leading" id="MNK-hk-9nP"/>
+                                    <constraint firstItem="fYj-eR-QJk" firstAttribute="leading" secondItem="Jrg-6b-wYq" secondAttribute="leading" constant="24" id="MNK-hk-9nP"/>
                                     <constraint firstItem="fYj-eR-QJk" firstAttribute="centerY" secondItem="Jrg-6b-wYq" secondAttribute="centerY" id="VRj-iq-RsK"/>
-                                    <constraint firstAttribute="height" constant="52" id="Xgx-S8-YPx"/>
-                                    <constraint firstAttribute="trailing" secondItem="fYj-eR-QJk" secondAttribute="trailing" id="pZE-kT-MoR"/>
+                                    <constraint firstAttribute="height" constant="68" id="Xgx-S8-YPx"/>
+                                    <constraint firstAttribute="trailing" secondItem="fYj-eR-QJk" secondAttribute="trailing" constant="24" id="pZE-kT-MoR"/>
                                 </constraints>
                             </view>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="aXq-jc-XH2">
@@ -146,6 +146,8 @@
                         <outlet property="headerLogoImageView" destination="8Ar-M6-8Nt" id="ceC-eO-x7j"/>
                         <outlet property="headerView" destination="aXq-jc-XH2" id="h7K-Xy-i1K"/>
                         <outlet property="settingsButton" destination="nGA-vp-VuA" id="a0B-tG-olp"/>
+                        <outlet property="tabBarContainer" destination="Jrg-6b-wYq" id="AC1-tb-ctr"/>
+                        <outlet property="tabBarFiller" destination="eB7-BA-vKV" id="AC2-tb-flr"/>
                         <outletCollection property="tabItems" destination="4wp-MN-Y9K" collectionClass="NSMutableArray" id="Edg-91-X9s"/>
                         <outletCollection property="tabItems" destination="PYb-Xo-V0p" collectionClass="NSMutableArray" id="Xek-R4-56c"/>
                         <outletCollection property="tabItems" destination="MkN-tp-o93" collectionClass="NSMutableArray" id="jgy-Jo-Wdy"/>

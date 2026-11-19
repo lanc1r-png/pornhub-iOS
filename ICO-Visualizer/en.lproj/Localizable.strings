@@ -1,0 +1,3 @@
+/* English is the development language: keys are the English texts themselves. */
+"fake_pin_description" = "When you enter a fake PIN on the PIN screen, you will be redirected to a simple Pokemon list, just to protect you ;).\nNote: if Face ID/Touch ID authentication is enabled, this feature is skipped.";
+"Redgifs" = "Redgifs";

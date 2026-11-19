@@ -10,6 +10,9 @@ import Foundation
 import UIKit
 
 extension String {
+    /// Returns the localized version of the string (the key is the English text).
+    var localized: String { NSLocalizedString(self, comment: "") }
+
     func capitalizingFirstLetter() -> String {
       return prefix(1).uppercased() + self.lowercased().dropFirst()
     }

@@ -50,6 +50,7 @@ class ReelCollectionViewCell: UICollectionViewCell {
     func setupNotContentView(){
         self.notContentView.isUserInteractionEnabled = true
         self.notContentView.isHidden = false
+        for case let label as UILabel in self.notContentView.subviews { label.text = "There is no more content to show, please check back later! :)".localized }
     }
     
     func setup(element: ReelElement, index: Int, playOnStart: Bool, isAudioOn: Bool, delegate: ReelsViewControllerDelegate){

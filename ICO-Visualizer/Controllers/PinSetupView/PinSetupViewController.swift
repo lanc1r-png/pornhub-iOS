@@ -72,7 +72,7 @@ class PinSetupViewController: UIViewController {
         label.font = UIFont(name: "HelveticaNeue-Bold", size: 24)
         label.textAlignment = .center
         label.numberOfLines = 0
-        label.text = "Please setup a secure PIN"
+        label.text = "Please setup a secure PIN".localized
         label.textColor = ColorLayout.default_text
         return label
     }()
@@ -91,7 +91,7 @@ class PinSetupViewController: UIViewController {
     let saveButton: UIButton = {
         let button = UIButton()
         button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("    Confirm    ", for: .normal)
+        button.setTitle("    " + "Confirm".localized + "    ", for: .normal)
         button.backgroundColor = ColorLayout.default_orange
         button.setTitleColor(.white, for: .normal)
         return button
@@ -145,7 +145,7 @@ class PinSetupViewController: UIViewController {
                     self?.dismiss(animated: true, completion: nil)
                 }
                 else{
-                    self?.descriptionLabel.text = "Wrong PIN"
+                    self?.descriptionLabel.text = "Wrong PIN".localized
                 }
             }
         }
@@ -162,17 +162,17 @@ class PinSetupViewController: UIViewController {
         
         pinConfirmView.isHidden = !(pinType == .newPin || pinType == .fakePin)
         saveButton.isHidden = !(pinType == .newPin || pinType == .fakePin)
-        self.titleLabel.text = pinType == .newPin ? "Please setup a secure PIN" : "Please insert your PIN"
+        self.titleLabel.text = pinType == .newPin ? "Please setup a secure PIN".localized : "Please insert your PIN".localized
         if self.pinType == .fakePin {
-            self.titleLabel.text = "Setup your fake PIN"
-            self.descriptionLabel.text = "When you digit a fake PIN in the PIN verification screen you will be redirect to a simple Pokemon list visualizer, just for protect you ;).\nBeware if you enable Face ID/Touch ID authentication this feature will be skipped"
+            self.titleLabel.text = "Setup your fake PIN".localized
+            self.descriptionLabel.text = "fake_pin_description".localized
         }
         
         if UserPreferences.shared.faceIdEnabled && pinType == .auth{
             let context = LAContext()
             var error: NSError?
             if context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) {
-                let reason = "Identify yourself!"
+                let reason = "Identify yourself!".localized
 
                 context.evaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, localizedReason: reason) {
                     [weak self] success, authenticationError in
@@ -205,7 +205,7 @@ class PinSetupViewController: UIViewController {
                     self.navigationController?.popViewController(animated: true)
                 }
                 else{
-                    self.showError(message: "PINs do not match")
+                    self.showError(message: "PINs do not match".localized)
                 }
             }
             else{
@@ -216,13 +216,13 @@ class PinSetupViewController: UIViewController {
             }
         }
         else{
-            self.showError(message: "Please insert a valid PIN")
+            self.showError(message: "Please insert a valid PIN".localized)
         }
     }
     
     private func showError(message: String){
-        let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+        let alert = UIAlertController(title: "Error".localized, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK".localized, style: .default, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
 }

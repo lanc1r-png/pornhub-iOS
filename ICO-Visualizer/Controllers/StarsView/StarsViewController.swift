@@ -28,10 +28,10 @@ class StarsViewController: BaseViewController {
         field.keyboardType = .default
         field.borderStyle = .none
         field.backgroundColor = ColorLayout.default_tab_background
-        field.placeholder = " Search..."
+        field.placeholder = " " + "Search...".localized
         field.textColor = ColorLayout.default_text
         field.attributedPlaceholder = NSAttributedString(
-            string: " Search...",
+            string: " " + "Search...".localized,
             attributes: [NSAttributedString.Key.foregroundColor: ColorLayout.default_text]
         )
         var imageView = UIImageView();
@@ -150,7 +150,7 @@ extension StarsViewController: UICollectionViewDelegate, UICollectionViewDataSou
                 headerView.setupTitle(title: "")
             }
             else{
-                headerView.setupTitle(title: "Pornstars")
+                headerView.setupTitle(title: "Pornstars".localized)
             }
             return headerView
 

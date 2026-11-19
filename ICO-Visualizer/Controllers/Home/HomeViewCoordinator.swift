@@ -33,11 +33,11 @@ class HomeViewCoordinator {
                 if let errorRes = error as? APIServiceError {
                     switch errorRes {
                     case .unknown:
-                        self.delegate.showError(message: "Unknown error")
+                        self.delegate.showError(message: "Unknown error".localized)
                     case .decodeError(let error):
                         self.delegate.showError(message: error.localizedDescription)
                     case .noDataFound:
-                        self.delegate.showError(message: "No data found")
+                        self.delegate.showError(message: "No data found".localized)
                     case .error(let errorResponse):
                         if errorResponse.code == "2001" && self.videos.count <= 0 {
                             self.delegate.showError(message: errorResponse.message)

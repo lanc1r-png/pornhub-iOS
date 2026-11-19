@@ -1,5 +1,4 @@
-# Uncomment the next line to define a global platform for your project
-# platform :ios, '9.0'
+platform :ios, '13.5'
 
 target 'ICO-visualizer' do
   # Comment the next line if you don't want to use dynamic frameworks
@@ -13,4 +12,15 @@ target 'ICO-visualizer' do
   pod 'CCBottomRefreshControl'
   pod 'SVPinView', '~> 1.0'
   pod 'AlamofireNetworkActivityLogger'
+end
+
+# Old pods declare very low deployment targets that modern Xcode no longer supports.
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.5'
+      config.build_settings['SWIFT_VERSION'] = '5.0'
+      config.build_settings['CODE_SIGNING_ALLOWED'] = 'NO'
+    end
+  end
 end

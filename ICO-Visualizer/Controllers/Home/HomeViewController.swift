@@ -29,10 +29,10 @@ class HomeViewController: BaseViewController {
         field.keyboardType = .default
         field.borderStyle = .none
         field.backgroundColor = ColorLayout.default_tab_background
-        field.placeholder = " Search..."
+        field.placeholder = " " + "Search...".localized
         field.textColor = ColorLayout.default_text
         field.attributedPlaceholder = NSAttributedString(
-            string: " Search...",
+            string: " " + "Search...".localized,
             attributes: [NSAttributedString.Key.foregroundColor: ColorLayout.default_text]
         )
         var imageView = UIImageView();
@@ -62,8 +62,8 @@ class HomeViewController: BaseViewController {
     }
 
     func showKillAlert(){
-        let alert = UIAlertController(title: "Error", message: "Autentication failed, the app will be killed", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { action in
+        let alert = UIAlertController(title: "Error".localized, message: "Autentication failed, the app will be killed".localized, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK".localized, style: .default, handler: { action in
             exit(-1)
         }))
         self.present(alert, animated: true, completion: nil)
@@ -176,12 +176,12 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            var titleText = "Home"
+            var titleText = "Home".localized
             if !self.coordinator.searchText.nilOrEmpty {
-                titleText = "\(self.coordinator.searchText!) Videos"
+                titleText = String(format: "%@ Videos".localized, self.coordinator.searchText!)
             }
             else if !self.coordinator.category.nilOrEmpty {
-                titleText = "\(self.coordinator.category!.capitalizingFirstLetter().replacingOccurrences(of: "-", with: " ")) Videos"
+                titleText = String(format: "%@ Videos".localized, self.coordinator.category!.capitalizingFirstLetter().replacingOccurrences(of: "-", with: " ").localized)
             }
             headerView.setupTitle(title: titleText)
             
@@ -202,7 +202,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.row == 0 {
             let cat = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
-            cat.setup(title: "Categories") {
+            cat.setup(title: "Categories".localized) {
                 let vc = CategoriesViewController()
                 vc.tabDelegate = self.tabDelegate
                 self.navigationController?.pushViewController(vc, animated: true)

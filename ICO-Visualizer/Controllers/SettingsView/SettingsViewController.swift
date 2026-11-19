@@ -36,7 +36,7 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            headerView.setupTitle(title: "Settings")
+            headerView.setupTitle(title: "Settings".localized)
             
             return headerView
 
@@ -54,12 +54,12 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let faceIdToggle = collectionView.dequeueReusableCell(withReuseIdentifier: ToggleCollectionViewCell.className, for: indexPath) as! ToggleCollectionViewCell
-        faceIdToggle.setup(title: "Face ID", isOn: UserPreferences.shared.faceIdEnabled) { isOn in
+        faceIdToggle.setup(title: "Face ID".localized, isOn: UserPreferences.shared.faceIdEnabled) { isOn in
             UserPreferences.shared.faceIdEnabled = isOn
         }
         if indexPath.row == 1{
             let iconSelectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
-            iconSelectionCell.setup(title: "Select App Icon") {
+            iconSelectionCell.setup(title: "Select App Icon".localized) {
                 let iconSelectionVc = IconSelectionViewController()
                 self.navigationController?.pushViewController(iconSelectionVc, animated: true)
             }
@@ -67,7 +67,7 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
         }
         if indexPath.row == 2{
             let iconSelectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
-            iconSelectionCell.setup(title: "Setup a fake PIN") {
+            iconSelectionCell.setup(title: "Setup a fake PIN".localized) {
                 let pinVc = PinSetupViewController()
                 pinVc.pinType = .fakePin
                 self.navigationController?.pushViewController(pinVc, animated: true)
@@ -76,7 +76,7 @@ extension SettingsViewController: UICollectionViewDelegate, UICollectionViewData
         }
         if indexPath.row == 3{
             let iconSelectionCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
-            iconSelectionCell.setup(title: "Select Reels source") {
+            iconSelectionCell.setup(title: "Select Reels source".localized) {
                 let pinVc = ReelSourceSelectionViewController()
                 self.navigationController?.pushViewController(pinVc, animated: true)
             }

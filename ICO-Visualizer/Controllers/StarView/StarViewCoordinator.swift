@@ -34,7 +34,7 @@ class StarViewCoordinator {
                 self.star.starVideos?.append(contentsOf: videos)
                 DispatchQueue.main.async {
                     if self.star.starVideos?.count == 0 {
-                        self.delegate.reloadView("No videos found for pornstar " + (self.star.starName ?? "") + " :(")
+                        self.delegate.reloadView(String(format: "No videos found for pornstar %@ :(".localized, self.star.starName ?? ""))
                     }
                     else{
                         self.delegate.reloadView(nil)

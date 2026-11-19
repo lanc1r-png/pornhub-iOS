@@ -29,7 +29,7 @@ class FakeViewController: UIViewController {
         label.font = UIFont(name: "HelveticaNeue-Bold", size: 24)
         label.textAlignment = .left
         label.numberOfLines = 1
-        label.text = "Pokemons"
+        label.text = "Pokemons".localized
         label.textColor = ColorLayout.default_text
         return label
     }()

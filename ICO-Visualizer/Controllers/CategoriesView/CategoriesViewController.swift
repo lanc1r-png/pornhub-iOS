@@ -30,10 +30,10 @@ class CategoriesViewController: BaseViewController {
         field.keyboardType = .default
         field.borderStyle = .none
         field.backgroundColor = ColorLayout.default_tab_background
-        field.placeholder = " Search..."
+        field.placeholder = " " + "Search...".localized
         field.textColor = ColorLayout.default_text
         field.attributedPlaceholder = NSAttributedString(
-            string: " Search...",
+            string: " " + "Search...".localized,
             attributes: [NSAttributedString.Key.foregroundColor: ColorLayout.default_text]
         )
         var imageView = UIImageView();
@@ -116,7 +116,7 @@ extension CategoriesViewController: UICollectionViewDelegate, UICollectionViewDa
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            headerView.setupTitle(title: "Categories")
+            headerView.setupTitle(title: "Categories".localized)
             
             return headerView
 

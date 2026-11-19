@@ -119,6 +119,8 @@
 		ADF1C4DB251CF97A00FC0242 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = ADF1C4DA251CF97A00FC0242 /* Assets.xcassets */; };
 		ADF1C4DE251CF97A00FC0242 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = ADF1C4DC251CF97A00FC0242 /* LaunchScreen.storyboard */; };
 		ADF1C4E8251D35B400FC0242 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF1C4E7251D35B400FC0242 /* APIService.swift */; };
+		AC0000000000000000000C01 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000B01 /* Localizable.strings */; };
+		AC0000000000000000000C02 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000B02 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -238,6 +240,10 @@
 		ADF1C4E7251D35B400FC0242 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
 		CD94CC2A08DA85EDDBBE04AB /* Pods_ICO_visualizer.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_ICO_visualizer.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCC1A15A506C6DBBC1E673E1 /* Pods-ICO-visualizer.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-ICO-visualizer.release.xcconfig"; path = "Target Support Files/Pods-ICO-visualizer/Pods-ICO-visualizer.release.xcconfig"; sourceTree = "<group>"; };
+		AC0000000000000000000A01 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AC0000000000000000000A02 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AC0000000000000000000A03 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AC0000000000000000000A04 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -623,8 +629,10 @@
 				ADF1C4DA251CF97A00FC0242 /* Assets.xcassets */,
 				ADF1C4DC251CF97A00FC0242 /* LaunchScreen.storyboard */,
 				ADF1C4DF251CF97A00FC0242 /* Info.plist */,
+				AC0000000000000000000B01 /* Localizable.strings */,
+				AC0000000000000000000B02 /* InfoPlist.strings */,
 			);
-			path = "ICO-visualizer";
+			path = "ICO-Visualizer";
 			sourceTree = "<group>";
 		};
 		ADF1C4E6251D35A800FC0242 /* Services */ = {
@@ -698,6 +706,7 @@
 			knownRegions = (
 				en,
 				Base,
+				ru,
 			);
 			mainGroup = ADF1C4C5251CF97600FC0242;
 			productRefGroup = ADF1C4CF251CF97600FC0242 /* Products */;
@@ -723,6 +732,8 @@
 				AD13B93427354362006676C2 /* ToggleCollectionViewCell.xib in Resources */,
 				AD13B9A727354D5E006676C2 /* AppIconBase2@2x.png in Resources */,
 				ADF1C4DE251CF97A00FC0242 /* LaunchScreen.storyboard in Resources */,
+				AC0000000000000000000C01 /* Localizable.strings in Resources */,
+				AC0000000000000000000C02 /* InfoPlist.strings in Resources */,
 				AD13B9BA27354D5E006676C2 /* AppIconDevelop@2x.png in Resources */,
 				AD13B9B227354D5E006676C2 /* DarkIcon@2x.png in Resources */,
 				AD13B9302735435C006676C2 /* NavigationButtonCollectionViewCell.xib in Resources */,
@@ -899,6 +910,24 @@
 			name = LaunchScreen.storyboard;
 			sourceTree = "<group>";
 		};
+		AC0000000000000000000B01 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AC0000000000000000000A01 /* en */,
+				AC0000000000000000000A02 /* ru */,
+			);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		AC0000000000000000000B02 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				AC0000000000000000000A03 /* en */,
+				AC0000000000000000000A04 /* ru */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
@@ -1024,7 +1053,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7FTQJ32GRV;
-				INFOPLIST_FILE = "ICO-visualizer/Info.plist";
+				INFOPLIST_FILE = "ICO-Visualizer/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1046,7 +1075,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_TEAM = 7FTQJ32GRV;
-				INFOPLIST_FILE = "ICO-visualizer/Info.plist";
+				INFOPLIST_FILE = "ICO-Visualizer/Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.5;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

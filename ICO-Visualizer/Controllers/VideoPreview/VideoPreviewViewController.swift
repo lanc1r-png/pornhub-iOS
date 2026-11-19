@@ -241,7 +241,7 @@ class VideoPreviewViewController: UIViewController {
             let numberFormatter = NumberFormatter()
             numberFormatter.numberStyle = .decimal
             let formattedNumber = numberFormatter.string(from: NSNumber(value:largeNumber)) ?? String(views)
-            viewsText += "\(formattedNumber.replacingOccurrences(of: ".", with: " ")) Views"
+            viewsText += String(format: "%@ Views".localized, formattedNumber.replacingOccurrences(of: ".", with: " "))
         }
         if let rating = self.video.rating?.ratingString, let ratingDouble = Double(rating) {
             viewsText += " | \(String(format: "%.0f", ratingDouble))%"

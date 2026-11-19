@@ -201,13 +201,13 @@ extension ReelsViewController: ReelsViewControllerDelegate {
     }
     
     func openUrl(url: URL) {
-        let alert = UIAlertController(title: "Alert", message: "You will ber redirect to external link\nOpen: \(url.absoluteString)?", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Open", style: .default, handler: { action in
+        let alert = UIAlertController(title: "Alert".localized, message: String(format: "You will be redirected to an external link\nOpen: %@?".localized, url.absoluteString), preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Open".localized, style: .default, handler: { action in
             if UIApplication.shared.canOpenURL(url){
                 UIApplication.shared.open(url, options: [:], completionHandler: nil)
             }
         }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        alert.addAction(UIAlertAction(title: "Cancel".localized, style: .cancel, handler: nil))
         self.present(alert, animated: true, completion: nil)
     }
     

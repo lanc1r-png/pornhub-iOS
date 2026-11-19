@@ -40,7 +40,7 @@ class BookmarksViewController: BaseViewController {
     
     private func checkIfHaveBookmarks(){
         self.errorTextLabel.isHidden = !(self.videoBookmarks.count == 0 && self.starsBookmarks.count == 0)
-        self.errorTextLabel.text = "You haven't added any videos or pornstars to your bookmarks yet :("
+        self.errorTextLabel.text = "You haven't added any videos or pornstars to your bookmarks yet :(".localized
     }
     
     @objc func onDidUpdateBookmarks(_ notification: Notification)
@@ -68,10 +68,10 @@ extension BookmarksViewController: UICollectionViewDelegate, UICollectionViewDat
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
             if indexPath.section == 0 {
-                headerView.setupTitle(title: self.starsBookmarks.count == 0 ? "" : "Pornstars")
+                headerView.setupTitle(title: self.starsBookmarks.count == 0 ? "" : "Pornstars".localized)
             }
             else{
-                headerView.setupTitle(title: self.videoBookmarks.count == 0 ? "" : "Videos")
+                headerView.setupTitle(title: self.videoBookmarks.count == 0 ? "" : "Videos".localized)
             }
             
             

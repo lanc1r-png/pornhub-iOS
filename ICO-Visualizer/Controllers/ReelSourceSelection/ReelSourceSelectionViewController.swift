@@ -38,7 +38,7 @@ extension ReelSourceSelectionViewController: UICollectionViewDelegate, UICollect
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            headerView.setupTitle(title: "Select Reel Data Source")
+            headerView.setupTitle(title: "Select Reel Data Source".localized)
             
             return headerView
 

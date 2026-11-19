@@ -38,7 +38,7 @@ extension IconSelectionViewController: UICollectionViewDelegate, UICollectionVie
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            headerView.setupTitle(title: "Select Icon")
+            headerView.setupTitle(title: "Select Icon".localized)
             
             return headerView
 
@@ -57,7 +57,7 @@ extension IconSelectionViewController: UICollectionViewDelegate, UICollectionVie
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let selectIconCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
         if indexPath.row == 0 {
-            selectIconCell.setup(title: "Default Icon") {
+            selectIconCell.setup(title: "Default Icon".localized) {
                 UIApplication.shared.setAlternateIconName(nil) { (error) in }
                 self.navigationController?.popViewController(animated: true)
             }

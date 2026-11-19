@@ -250,7 +250,7 @@ class StarViewController: BaseViewController {
         if let starUrl = self.coordinator.star.starURL {
             let vc = WebViewController()
             vc.url = starUrl
-            vc.titleText = "\(self.coordinator.star.starName ?? "") Web Page"
+            vc.titleText = String(format: "%@ Web Page".localized, self.coordinator.star.starName ?? "")
             self.present(vc, animated: true)
         }
     }
@@ -312,7 +312,7 @@ extension StarViewController: UICollectionViewDelegate, UICollectionViewDataSour
         case UICollectionView.elementKindSectionHeader:
 
             let headerView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: TitleSectionHeaderReusableView.className, for: indexPath) as! TitleSectionHeaderReusableView
-            let title = "\(self.coordinator.star.starName ?? "") \(collectionView == self.collectionView ? "Videos" : "Photos")"
+            let title = "\(self.coordinator.star.starName ?? "") \(collectionView == self.collectionView ? "Videos".localized : "Photos".localized)"
             headerView.setupTitle(title: title)
             
             return headerView
@@ -335,7 +335,7 @@ extension StarViewController: UICollectionViewDelegate, UICollectionViewDataSour
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if indexPath.row == 0 {
             let navCell = collectionView.dequeueReusableCell(withReuseIdentifier: NavigationButtonCollectionViewCell.className, for: indexPath) as! NavigationButtonCollectionViewCell
-            navCell.setup(title: collectionView == self.collectionView ? "Photos" : "Videos") {
+            navCell.setup(title: collectionView == self.collectionView ? "Photos".localized : "Videos".localized) {
                 if self.contentType == .videos {
                     self.contentType = .images
                 }
