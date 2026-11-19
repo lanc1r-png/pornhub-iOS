@@ -14,4 +14,4 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Probe embed page
-        run: python3 .github/probe/embed.py
+        run: python3 .github/probe/watch.py
