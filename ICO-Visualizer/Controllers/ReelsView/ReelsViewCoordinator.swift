@@ -31,52 +31,30 @@ class ReelsViewCoordinator {
     }
     
     func fetchFromRedgifs(){
-        APIService.shared.fetchFeeds { response in
+        APIService.shared.fetchRedgifs(page: self.cursor) { response in
             switch response {
             case .success(let response):
-                var row = self.videos.count - 1
+                var users: [String: RedgifsUser] = [:]
+                for user in response.users ?? [] {
+                    if let name = user.username?.lowercased() { users[name] = user }
+                }
                 var result: [ReelElement] = []
-                for item in response.verticalGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
+                for gif in response.gifs ?? [] {
+                    guard let url = gif.urls?.hd ?? gif.urls?.sd, URL(string: url) != nil else { continue }
+                    let user = users[(gif.userName ?? "").lowercased()]
+                    let profile = user?.profileUrl ?? gif.userName.map { "https://www.redgifs.com/users/\($0)" }
+                    result.append(ReelElement(videoUrl: url, username: gif.userName, avatarUrl: user?.profileImageUrl, likes: gif.likes?.int, views: gif.views?.int, tags: gif.tags, verified: gif.verified, externalUrl: profile, duration: gif.duration?.int, width: gif.width?.int, height: gif.height?.int))
                 }
-                for item in response.hotGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
+                if result.isEmpty && self.videos.isEmpty {
+                    self.delegate.showReelsError("No data found".localized)
+                    return
                 }
-                for item in response.verifiedGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
-                }
-                for item in response.soundGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
-                }
-                for item in response.horizontalGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
-                }
-                for item in response.longGifs {
-                    if URL(string: item.urls?.hd ?? "") != nil{
-                        result.append(ReelElement(videoUrl: item.urls?.hd, username: item.user?.username, avatarUrl: item.user?.profileImageURL, likes: item.likes, views: item.views, tags: item.tags, verified: item.verified, externalUrl: item.user?.profileURL, duration: item.duration, width: item.width, height: item.height))
-                    }
-                }
+                let start = self.videos.count
                 self.videos.append(contentsOf: result)
-                var indexPathsToReload = [IndexPath]()
-                let section = 0
-                for _ in result {
-                    let indexPath = IndexPath(row: row, section: section)
-                    row+=1
-                    indexPathsToReload.append(indexPath)
-                }
-                self.delegate.reloadView(newIndexs: indexPathsToReload)
+                let indexPaths = (start..<(start + result.count)).map { IndexPath(row: $0, section: 0) }
+                self.delegate.reloadView(newIndexs: indexPaths)
             case .failure(let error):
-                print(error)
+                self.delegate.showReelsError(error.localizedDescription)
             }
         }
     }
@@ -116,7 +94,7 @@ class ReelsViewCoordinator {
                 }
                 self.delegate.reloadView(newIndexs: indexPathsToReload)
             case .failure(let error):
-                print(error)
+                self.delegate.showReelsError(error.localizedDescription)
             }
         }
     }
@@ -149,7 +127,7 @@ class ReelsViewCoordinator {
                 
                 self.delegate.reloadView(newIndexs: indexPathsToReload)
             case .failure(let error):
-                print(error)
+                self.delegate.showReelsError(error.localizedDescription)
             }
         }
     }

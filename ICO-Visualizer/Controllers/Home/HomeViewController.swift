@@ -13,12 +13,17 @@ class HomeViewController: BaseViewController {
     
     private var coordinator: HomeViewCoordinator!
     private var loadingData = false
+    private var searchGlass: UIVisualEffectView?
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        Glass.roundCapsuleIfNeeded(searchGlass)
+    }
     
     let searchView: UIView = {
         let view = UIView()
         view.translatesAutoresizingMaskIntoConstraints = false
-        view.backgroundColor = ColorLayout.default_tab_background
-        view.setShadowAndCorner(cornerRadius: 8)
+        view.backgroundColor = .clear
         return view
     }()
     
@@ -28,12 +33,12 @@ class HomeViewController: BaseViewController {
         field.returnKeyType = .search
         field.keyboardType = .default
         field.borderStyle = .none
-        field.backgroundColor = ColorLayout.default_tab_background
+        field.backgroundColor = .clear
         field.placeholder = " " + "Search...".localized
         field.textColor = ColorLayout.default_text
         field.attributedPlaceholder = NSAttributedString(
             string: " " + "Search...".localized,
-            attributes: [NSAttributedString.Key.foregroundColor: ColorLayout.default_text]
+            attributes: [NSAttributedString.Key.foregroundColor: UIColor.white.withAlphaComponent(0.55)]
         )
         var imageView = UIImageView();
         var image = UIImage(named: "search_icon")
@@ -94,6 +99,20 @@ class HomeViewController: BaseViewController {
         searchField.leadingAnchor.constraint(equalTo: self.searchView.leadingAnchor, constant: 30).isActive = true
         searchField.centerYAnchor.constraint(equalTo: self.searchView.centerYAnchor).isActive = true
         searchField.delegate = self
+        searchField.heightAnchor.constraint(equalToConstant: 40).isActive = true
+        searchField.leftView?.frame = CGRect(x: 0, y: 0, width: 36, height: 20)
+        searchField.leftView?.contentMode = .scaleAspectFit
+        searchField.tintColor = ColorLayout.default_orange
+        let searchGlass = Glass.make(shape: .capsule, fallbackFill: UIColor.white.withAlphaComponent(0.08))
+        searchGlass.isUserInteractionEnabled = false
+        self.searchView.insertSubview(searchGlass, belowSubview: searchField)
+        NSLayoutConstraint.activate([
+            searchGlass.leadingAnchor.constraint(equalTo: searchField.leadingAnchor),
+            searchGlass.trailingAnchor.constraint(equalTo: searchField.trailingAnchor),
+            searchGlass.topAnchor.constraint(equalTo: searchField.topAnchor),
+            searchGlass.bottomAnchor.constraint(equalTo: searchField.bottomAnchor)
+        ])
+        self.searchGlass = searchGlass
         
         let bottomRefreshController = UIRefreshControl()
         bottomRefreshController.tintColor = ColorLayout.default_text

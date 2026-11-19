@@ -121,6 +121,7 @@
 		ADF1C4E8251D35B400FC0242 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ADF1C4E7251D35B400FC0242 /* APIService.swift */; };
 		AC0000000000000000000C01 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000B01 /* Localizable.strings */; };
 		AC0000000000000000000C02 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000B02 /* InfoPlist.strings */; };
+		AC0000000000000000000C03 /* Glass.swift in Sources */ = {isa = PBXBuildFile; fileRef = AC0000000000000000000A05 /* Glass.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -244,6 +245,7 @@
 		AC0000000000000000000A02 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AC0000000000000000000A03 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		AC0000000000000000000A04 /* ru */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		AC0000000000000000000A05 /* Glass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Glass.swift; path = "ICO-Visualizer/Extensions/Glass.swift"; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -430,6 +432,7 @@
 		AD5BC84827329B60004898BB /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				AC0000000000000000000A05 /* Glass.swift */,
 				AD5BC85227329EBD004898BB /* BaseViewController.swift */,
 				AD8B0D67251E24B000566B9B /* BaseNavigationController.swift */,
 				AD5BC84627329B0C004898BB /* FullWidthCollectionViewCell.swift */,
@@ -822,6 +825,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AC0000000000000000000C03 /* Glass.swift in Sources */,
 				AD5BC8692732D368004898BB /* CategoriesModel.swift in Sources */,
 				AD13B937273543E3006676C2 /* UserPreferences.swift in Sources */,
 				AD5BC86C2732D48B004898BB /* TitleCollectionViewCell.swift in Sources */,

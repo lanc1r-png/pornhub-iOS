@@ -21,17 +21,25 @@ class TabBarViewController: UIViewController {
     @IBOutlet weak var tabBarFiller: UIView!
 
     // MARK: - Modern (Liquid Glass) chrome
+    @IBOutlet weak var tabBarTopConstraint: NSLayoutConstraint!
+
     private var tabGlassView: UIVisualEffectView?
     private var tabIndicatorView: UIVisualEffectView?
     private var settingsGlassView: UIVisualEffectView?
+    private let bottomFadeView = UIView()
+    private let bottomFadeLayer = CAGradientLayer()
     private var selectedIndex: Int = 0
+    private var previewIndex: Int = 0
+    private var isScrubbing = false
     private let selectionHaptics = UISelectionFeedbackGenerator()
-    
+    private let liftHaptics = UIImpactFeedbackGenerator(style: .soft)
+    private let tabBarHeight: CGFloat = 68
+
     @IBOutlet weak var headerLogoImageView: UIImageView!
     private var mainNavigationController: BaseNavigationController!
 
     lazy var controllers = [HomeViewController(), BookmarksViewController(), StarsViewController(), ReelsViewController()]
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         NotificationCenter.default.addObserver(self, selector: #selector(onDidEnterFakePin(_:)), name: .didEnterFakePin, object: nil)
@@ -40,33 +48,19 @@ class TabBarViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        layoutTabIndicator(animated: false)
-        for glass in [tabGlassView, tabIndicatorView, settingsGlassView] {
-            // Pre-iOS 26 fallback has no glass shape of its own, so round it manually.
-            if let glass = glass, glass.layer.cornerRadius != glass.bounds.height / 2, glass.effect is UIBlurEffect {
-                glass.layer.cornerRadius = glass.bounds.height / 2
-            }
-        }
+        // Content flows under the floating glass bar (except on Reels, which is full-screen video above the bar).
+        let overlap = selectedIndex == 3 ? 0 : tabBarHeight + view.safeAreaInsets.bottom
+        tabBarTopConstraint?.constant = -overlap
+        bottomFadeLayer.frame = bottomFadeView.bounds
+        if !isScrubbing { layoutTabIndicator(animated: false) }
+        Glass.roundCapsuleIfNeeded(tabGlassView)
+        Glass.roundCapsuleIfNeeded(tabIndicatorView)
+        Glass.roundCapsuleIfNeeded(settingsGlassView)
     }
 
-    /// Builds a glass surface: real Liquid Glass on iOS 26+/27, a blur material on older systems.
-    private func makeGlassView(tint: UIColor? = nil, interactive: Bool = false, fallbackFill: UIColor? = nil) -> UIVisualEffectView {
-        let view: UIVisualEffectView
-        if #available(iOS 26.0, *) {
-            let glass = UIGlassEffect(style: .regular)
-            glass.tintColor = tint
-            glass.isInteractive = interactive
-            view = UIVisualEffectView(effect: glass)
-            view.cornerConfiguration = .capsule()
-        } else {
-            view = UIVisualEffectView(effect: UIBlurEffect(style: .systemThinMaterialDark))
-            view.clipsToBounds = true
-            view.layer.cornerCurve = .continuous
-            view.contentView.backgroundColor = fallbackFill ?? tint?.withAlphaComponent(0.18)
-        }
-        view.translatesAutoresizingMaskIntoConstraints = false
-        view.isUserInteractionEnabled = false
-        return view
+    /// Visual order of the tabs from left to right (the storyboard order differs from the tab indexes).
+    private var orderedItems: [UIButton] {
+        return (tabItems ?? []).sorted { $0.convert($0.bounds, to: tabBarContainer).midX < $1.convert($1.bounds, to: tabBarContainer).midX }
     }
 
     private func setupModernChrome() {
@@ -75,8 +69,21 @@ class TabBarViewController: UIViewController {
         tabBarFiller.isHidden = true
         tabBarContainer.backgroundColor = .clear
 
+        // Soft fade so content slides gently under the glass bar
+        bottomFadeLayer.colors = [UIColor.clear.cgColor, ColorLayout.default_background.withAlphaComponent(0.92).cgColor]
+        bottomFadeView.layer.addSublayer(bottomFadeLayer)
+        bottomFadeView.isUserInteractionEnabled = false
+        bottomFadeView.translatesAutoresizingMaskIntoConstraints = false
+        view.insertSubview(bottomFadeView, belowSubview: tabBarContainer)
+        NSLayoutConstraint.activate([
+            bottomFadeView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bottomFadeView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bottomFadeView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            bottomFadeView.heightAnchor.constraint(equalToConstant: 150)
+        ])
+
         // Floating glass tab bar
-        let pill = makeGlassView()
+        let pill = Glass.make(shape: .capsule)
         tabBarContainer.insertSubview(pill, at: 0)
         NSLayoutConstraint.activate([
             pill.leadingAnchor.constraint(equalTo: tabBarContainer.leadingAnchor, constant: 16),
@@ -86,12 +93,21 @@ class TabBarViewController: UIViewController {
         ])
         tabGlassView = pill
 
-        // Selection highlight (orange-tinted glass) that slides between tabs
-        let indicator = makeGlassView(fallbackFill: UIColor.white.withAlphaComponent(0.14))
-        indicator.frame = .zero
+        // Selection "droplet": glass that slides, stretches and follows the finger
+        let indicator = Glass.make(shape: .capsule,
+                                   tint: UIColor.white.withAlphaComponent(0.20),
+                                   fallbackFill: UIColor.white.withAlphaComponent(0.16))
         indicator.translatesAutoresizingMaskIntoConstraints = true
+        indicator.isUserInteractionEnabled = false
         tabBarContainer.insertSubview(indicator, aboveSubview: pill)
         tabIndicatorView = indicator
+
+        // Whole bar is a scrub surface: tap a tab or drag across them
+        let scrub = UILongPressGestureRecognizer(target: self, action: #selector(handleScrub(_:)))
+        scrub.minimumPressDuration = 0
+        scrub.allowableMovement = .greatestFiniteMagnitude
+        tabBarContainer.addGestureRecognizer(scrub)
+        (tabItems ?? []).first?.superview?.isUserInteractionEnabled = false
 
         // Modern SF Symbols instead of the old flat PNG icons
         let symbols = ["house.fill", "bookmark.fill", "star.fill", "play.square.stack.fill"]
@@ -107,7 +123,7 @@ class TabBarViewController: UIViewController {
         settingsButton.tintColor = UIColor.white.withAlphaComponent(0.85)
 
         // Glass settings button
-        let settingsGlass = makeGlassView(interactive: true)
+        let settingsGlass = Glass.make(shape: .capsule, interactive: false)
         headerView.insertSubview(settingsGlass, belowSubview: settingsButton)
         NSLayoutConstraint.activate([
             settingsGlass.centerXAnchor.constraint(equalTo: settingsButton.centerXAnchor),
@@ -120,23 +136,93 @@ class TabBarViewController: UIViewController {
         layoutTabIndicator(animated: false)
     }
 
+    private func indicatorFrame(forCenterX centerX: CGFloat, lifted: Bool) -> CGRect {
+        let items = orderedItems
+        let itemWidth = items.first.map { $0.convert($0.bounds, to: tabBarContainer).width } ?? 80
+        let width = itemWidth - 4 + (lifted ? 18 : 0)
+        let height: CGFloat = lifted ? 58 : 50
+        return CGRect(x: centerX - width / 2, y: tabBarContainer.bounds.midY - height / 2, width: width, height: height)
+    }
+
+    private func centerX(ofTab index: Int) -> CGFloat {
+        guard let items = tabItems, index < items.count else { return 0 }
+        return items[index].convert(items[index].bounds, to: tabBarContainer).midX
+    }
+
     private func layoutTabIndicator(animated: Bool) {
-        guard let indicator = tabIndicatorView,
-              let items = tabItems, selectedIndex < items.count else { return }
+        guard let indicator = tabIndicatorView, selectedIndex < (tabItems?.count ?? 0) else { return }
         tabBarContainer.layoutIfNeeded()
-        let target = items[selectedIndex].convert(items[selectedIndex].bounds, to: tabBarContainer)
-            .insetBy(dx: 2, dy: 0)
-        let frame = CGRect(x: target.minX, y: tabBarContainer.bounds.midY - 25, width: target.width, height: 50)
+        let frame = indicatorFrame(forCenterX: centerX(ofTab: selectedIndex), lifted: false)
         guard indicator.frame != frame else { return }
         if animated {
-            UIView.animate(withDuration: 0.45, delay: 0, usingSpringWithDamping: 0.78, initialSpringVelocity: 0.4, options: [.allowUserInteraction, .beginFromCurrentState]) {
+            UIView.animate(withDuration: 0.5, delay: 0, usingSpringWithDamping: 0.72, initialSpringVelocity: 0.6, options: [.allowUserInteraction, .beginFromCurrentState]) {
                 indicator.frame = frame
             }
         } else {
             indicator.frame = frame
         }
     }
-    
+
+    private func tint(forIndex index: Int) {
+        for (i, item) in (tabItems ?? []).enumerated() {
+            let selected = i == index
+            UIView.animate(withDuration: 0.2) {
+                item.tintColor = selected ? ColorLayout.default_orange : UIColor.white.withAlphaComponent(0.6)
+                item.transform = selected ? CGAffineTransform(scaleX: 1.12, y: 1.12) : .identity
+            }
+        }
+    }
+
+    private func nearestTabIndex(toX x: CGFloat) -> Int {
+        guard let items = tabItems, !items.isEmpty else { return 0 }
+        var best = 0
+        var bestDistance = CGFloat.greatestFiniteMagnitude
+        for i in 0..<items.count {
+            let d = abs(centerX(ofTab: i) - x)
+            if d < bestDistance { bestDistance = d; best = i }
+        }
+        return best
+    }
+
+    @objc private func handleScrub(_ gesture: UILongPressGestureRecognizer) {
+        guard let indicator = tabIndicatorView, let items = tabItems, !items.isEmpty else { return }
+        let x = gesture.location(in: tabBarContainer).x
+        let xs = orderedItems.map { $0.convert($0.bounds, to: tabBarContainer).midX }
+        let clampedX = min(max(x, xs.first ?? x), xs.last ?? x)
+
+        switch gesture.state {
+        case .began:
+            isScrubbing = true
+            previewIndex = nearestTabIndex(toX: clampedX)
+            liftHaptics.impactOccurred()
+            UIView.animate(withDuration: 0.38, delay: 0, usingSpringWithDamping: 0.62, initialSpringVelocity: 0.8, options: [.allowUserInteraction, .beginFromCurrentState]) {
+                indicator.frame = self.indicatorFrame(forCenterX: clampedX, lifted: true)
+            }
+            tint(forIndex: previewIndex)
+        case .changed:
+            let target = indicatorFrame(forCenterX: clampedX, lifted: true)
+            UIView.animate(withDuration: 0.16, delay: 0, options: [.allowUserInteraction, .beginFromCurrentState, .curveEaseOut]) {
+                indicator.frame = target
+            }
+            let nearest = nearestTabIndex(toX: clampedX)
+            if nearest != previewIndex {
+                previewIndex = nearest
+                selectionHaptics.selectionChanged()
+                tint(forIndex: nearest)
+            }
+        case .ended, .cancelled, .failed:
+            isScrubbing = false
+            let final = gesture.state == .ended ? nearestTabIndex(toX: clampedX) : selectedIndex
+            if final != selectedIndex {
+                setViewController(index: final)
+            }
+            tint(forIndex: selectedIndex)
+            layoutTabIndicator(animated: true)
+        default:
+            break
+        }
+    }
+
     @objc func onDidEnterFakePin(_ notification: Notification)
     {
         DispatchQueue.main.async {
@@ -162,16 +248,14 @@ class TabBarViewController: UIViewController {
         vc.tabDelegate = self
         self.mainNavigationController.setViewControllers([vc], animated: false)
         
-        for item in tabItems! {
-            item.setTitle("", for: .normal)
-            item.tintColor = UIColor.white.withAlphaComponent(0.6)
-        }
-        self.tabItems![index].tintColor = ColorLayout.default_orange
         settingsButton.setTitle("", for: .normal)
+        for item in tabItems! { item.setTitle("", for: .normal) }
         if selectedIndex != index { selectionHaptics.selectionChanged() }
         selectedIndex = index
+        tint(forIndex: index)
+        view.setNeedsLayout()
         layoutTabIndicator(animated: tabIndicatorView?.window != nil)
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             vc.viewDidSet()
         }

@@ -24,8 +24,33 @@ class VideoCollectionViewCell: FullWidthCollectionViewCell {
         return CAGradientLayer()
     }()
     
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        backgroundCellView.applyCardStyle(cornerRadius: 28)
+        thumbImageView.contentMode = .scaleAspectFill
+        thumbImageView.clipsToBounds = true
+        thumbImageView.layer.cornerRadius = 20
+        thumbImageView.layer.cornerCurve = .continuous
+        gradientView.isHidden = true
+        titleLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        starLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        starLabel.textColor = ColorLayout.default_orange
+        viewsLabel.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        viewsLabel.textColor = UIColor.white.withAlphaComponent(0.6)
+        durationLabel.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
+        durationLabel.textColor = .white
+        Glass.attachBadge(behind: durationLabel, in: backgroundCellView)
+    }
+
+    override var isHighlighted: Bool {
+        didSet {
+            UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
+                self.transform = self.isHighlighted ? CGAffineTransform(scaleX: 0.97, y: 0.97) : .identity
+            }
+        }
+    }
+
     func setup(video: Video){
-        backgroundCellView.setShadowAndCorner(cornerRadius: 8)
         if let thumbUrl = video.thumb{
             thumbImageView.sd_setImage(with: URL(string: thumbUrl)!, completed: nil)
         }

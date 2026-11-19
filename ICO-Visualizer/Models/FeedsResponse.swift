@@ -82,3 +82,47 @@ struct Creator: Codable {
     }
 }
 
+
+
+// MARK: - Redgifs v2 search (current API)
+
+/// Decodes numbers that the API may send as Int, Double or String.
+struct LooseNumber: Codable {
+    let value: Double
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if let i = try? c.decode(Int.self) { value = Double(i) }
+        else if let d = try? c.decode(Double.self) { value = d }
+        else if let s = try? c.decode(String.self), let d = Double(s) { value = d }
+        else { value = 0 }
+    }
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.singleValueContainer()
+        try c.encode(value)
+    }
+    var int: Int { Int(value) }
+}
+
+struct RedgifsGif: Codable {
+    let id: String?
+    let userName: String?
+    let likes: LooseNumber?
+    let views: LooseNumber?
+    let duration: LooseNumber?
+    let width: LooseNumber?
+    let height: LooseNumber?
+    let tags: [String]?
+    let verified: Bool?
+    let urls: Urls?
+}
+
+struct RedgifsUser: Codable {
+    let username: String?
+    let profileImageUrl: String?
+    let profileUrl: String?
+}
+
+struct RedgifsSearchResponse: Codable {
+    let gifs: [RedgifsGif]?
+    let users: [RedgifsUser]?
+}

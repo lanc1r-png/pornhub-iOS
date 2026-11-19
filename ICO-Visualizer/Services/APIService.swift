@@ -38,16 +38,67 @@ class APIService {
         return NSError(domain: "ICO", code: status, userInfo: [NSLocalizedDescriptionKey: "HTTP \(status) \(host)\n\(body)"])
     }
 
+    // MARK: Redgifs (v2 requires a temporary bearer token)
+    private var redgifsToken: String?
+    private let browserUA = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
+
+    private func redgifsAuth(completion: @escaping (Result<String, Error>) -> Void) {
+        if let token = redgifsToken { completion(.success(token)); return }
+        AF.request("https://api.redgifs.com/v2/auth/temporary", headers: ["User-Agent": browserUA]).responseData { result in
+            if let error = result.error {
+                completion(.failure(APIService.describe(error, data: result.data, response: result.response)))
+                return
+            }
+            if let data = result.data,
+               let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let token = json["token"] as? String {
+                self.redgifsToken = token
+                completion(.success(token))
+            } else {
+                let body = String(decoding: (result.data ?? Data()).prefix(160), as: UTF8.self)
+                completion(.failure(NSError(domain: "ICO", code: result.response?.statusCode ?? 0, userInfo: [NSLocalizedDescriptionKey: "Redgifs auth failed: \(body)"])))
+            }
+        }
+    }
+
+    func fetchRedgifs(page: Int, completionHandler: ((Result<RedgifsSearchResponse, Error>) -> Void)?) {
+        redgifsAuth { auth in
+            switch auth {
+            case .failure(let error):
+                completionHandler?(.failure(error))
+            case .success(let token):
+                let headers: HTTPHeaders = ["Authorization": "Bearer \(token)", "User-Agent": self.browserUA]
+                let params: Parameters = ["search_text": "", "order": "trending", "count": 30, "page": page]
+                AF.request("https://api.redgifs.com/v2/gifs/search", method: .get, parameters: params, headers: headers).responseData { result in
+                    if let error = result.error {
+                        completionHandler?(.failure(APIService.describe(error, data: result.data, response: result.response)))
+                        return
+                    }
+                    if result.response?.statusCode == 401 { self.redgifsToken = nil }
+                    guard let data = result.data else {
+                        completionHandler?(.failure(APIServiceError.noDataFound)); return
+                    }
+                    do {
+                        completionHandler?(.success(try JSONDecoder().decode(RedgifsSearchResponse.self, from: data)))
+                    } catch {
+                        let body = String(decoding: data.prefix(160), as: UTF8.self)
+                        completionHandler?(.failure(NSError(domain: "ICO", code: result.response?.statusCode ?? 0, userInfo: [NSLocalizedDescriptionKey: "HTTP \(result.response?.statusCode ?? 0): \(body)"])))
+                    }
+                }
+            }
+        }
+    }
+
     private var retryCount: Int = 0
     private let maxRetry: Int = 3
     
     func sendSearchRequest(searchText: String? = nil, page: Int = 1, completionHandler: ((Result<VideosResponseModel, Error>) -> Void)?){
-        self.sendSearchRequest(searchText: searchText, category: "teen-18-1", page: page, completionHandler: completionHandler)
+        self.sendSearchRequest(searchText: searchText, category: nil, page: page, completionHandler: completionHandler)
     }
     
     func sendSearchRequest(searchText: String? = nil, category: String? = nil, page: Int = 1, completionHandler: ((Result<VideosResponseModel, Error>) -> Void)?){
         let url = "\(self.baseUrl)/search"
-        var parameters: Parameters = [ "page" : page, "rating" : 80 ]
+        var parameters: Parameters = [ "page" : page, "ordering" : "mostviewed", "thumbsize" : "large" ]
         if let searchText = searchText {
             parameters["search"] = searchText
         }

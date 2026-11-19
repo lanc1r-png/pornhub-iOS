@@ -16,6 +16,8 @@ class ReelsViewController: BaseViewController {
     let refreshControl = UIRefreshControl()
     
     private var loadingData = false
+    override var bottomContentInset: CGFloat { return 0 }
+    var coordinatorIsEmpty: Bool { return collectionView.numberOfItems(inSection: 0) == 0 }
 
     private var currentPage: Int = 0
     
@@ -188,6 +190,19 @@ extension ReelsViewController: UICollectionViewDelegate, UICollectionViewDataSou
 }
 
 extension ReelsViewController: ReelsViewControllerDelegate {
+    func showReelsError(_ message: String) {
+        DispatchQueue.main.async {
+            self.loadingData = false
+            self.refreshControl.endRefreshing()
+            self.collectionView.bottomRefreshControl?.endRefreshing()
+            self.loadingView.isHidden = true
+            if self.coordinatorIsEmpty {
+                self.errorTextLabel.text = message + "\n\n" + "Pull down to retry".localized
+                self.errorTextLabel.isHidden = false
+            }
+        }
+    }
+
     func reloadView(newIndexs: [IndexPath]) {
         loadingView.isHidden = false
         loadingData = false

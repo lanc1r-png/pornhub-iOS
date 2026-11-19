@@ -15,8 +15,25 @@ class StarCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var backgroundCellView: UIView!
     @IBOutlet weak var bookmarkIcon: UIImageView!
     
+    override func awakeFromNib() {
+        super.awakeFromNib()
+        backgroundCellView.applyCardStyle(cornerRadius: 28)
+        thumbImageView.contentMode = .scaleAspectFill
+        thumbImageView.clipsToBounds = true
+        thumbImageView.layer.cornerRadius = 22
+        thumbImageView.layer.cornerCurve = .continuous
+        titleLabel.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+    }
+
+    override var isHighlighted: Bool {
+        didSet {
+            UIView.animate(withDuration: 0.25, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
+                self.transform = self.isHighlighted ? CGAffineTransform(scaleX: 0.96, y: 0.96) : .identity
+            }
+        }
+    }
+
     func setup(star: Star){
-        backgroundCellView.setShadowAndCorner(cornerRadius: 8)
         if let thumbUrl = star.starThumb{
             thumbImageView.sd_setImage(with: URL(string: thumbUrl)!, completed: nil)
         }

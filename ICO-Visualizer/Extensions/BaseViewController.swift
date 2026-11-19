@@ -44,6 +44,18 @@ class BaseViewController: UIViewController {
         errorTextLabel.centerYAnchor.constraint(equalTo: self.collectionView.centerYAnchor).isActive = true
     }
     
+    /// Extra space at the bottom so the last items can scroll above the floating tab bar.
+    var bottomContentInset: CGFloat { return 80 + max(ContentLayout.safeAreaBottomHeight, 20) }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        let inset = bottomContentInset
+        if collectionView.contentInset.bottom != inset {
+            collectionView.contentInset.bottom = inset
+            collectionView.verticalScrollIndicatorInsets.bottom = inset
+        }
+    }
+
     func viewDidSet(){
         
     }

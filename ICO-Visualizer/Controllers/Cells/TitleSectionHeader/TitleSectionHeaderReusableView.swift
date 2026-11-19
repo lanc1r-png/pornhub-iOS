@@ -11,9 +11,17 @@ class TitleSectionHeaderReusableView: UICollectionReusableView {
 
     var titleLabel: UILabel = {
         let label = UILabel()
-        label.custom(title: "Title", font: UIFont(name: "HelveticaNeue-Medium", size:20)!, titleColor: ColorLayout.default_text, textAlignment: .left, numberOfLines: 1)
+        label.custom(title: "Title", font: TitleSectionHeaderReusableView.titleFont, titleColor: ColorLayout.default_text, textAlignment: .left, numberOfLines: 1)
         return label
     }()
+
+    static var titleFont: UIFont {
+        let base = UIFont.systemFont(ofSize: 30, weight: .bold)
+        if let descriptor = base.fontDescriptor.withDesign(.rounded) {
+            return UIFont(descriptor: descriptor, size: 30)
+        }
+        return base
+    }
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -40,8 +48,8 @@ extension TitleSectionHeaderReusableView : ViewSetable {
 
     func setupConstraints() {
         titleLabel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -12).isActive = true
-        titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 30).isActive = true
-        titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 30).isActive = true
+        titleLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 24).isActive = true
+        titleLabel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24).isActive = true
     }
 }
 

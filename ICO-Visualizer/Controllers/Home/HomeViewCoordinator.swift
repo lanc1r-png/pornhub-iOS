@@ -24,7 +24,7 @@ class HomeViewCoordinator {
     }
     
     func loadData(){
-        APIService.shared.sendSearchRequest(searchText: self.searchText, category: self.category ?? "teen-18-1", page: currentPage) { result in
+        APIService.shared.sendSearchRequest(searchText: self.searchText, category: self.category, page: currentPage) { result in
             switch result {
             case .success(let videos):
                 self.videos.append(contentsOf: videos.videos)
@@ -39,8 +39,10 @@ class HomeViewCoordinator {
                     case .noDataFound:
                         self.delegate.showError(message: "No data found".localized)
                     case .error(let errorResponse):
-                        if errorResponse.code == "2001" && self.videos.count <= 0 {
+                        if self.videos.count <= 0 {
                             self.delegate.showError(message: errorResponse.message)
+                        } else {
+                            self.delegate.reloadView()
                         }
                     }
 

@@ -11,6 +11,7 @@ import Foundation
 protocol ReelsViewControllerDelegate {
     func reloadView(newIndexs: [IndexPath])
     func reloadCollection()
+    func showReelsError(_ message: String)
     func openUrl(url: URL)
     func switchSound()
     func openWebView(title: String, url: String)

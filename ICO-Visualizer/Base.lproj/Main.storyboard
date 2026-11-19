@@ -147,6 +147,7 @@
                         <outlet property="headerView" destination="aXq-jc-XH2" id="h7K-Xy-i1K"/>
                         <outlet property="settingsButton" destination="nGA-vp-VuA" id="a0B-tG-olp"/>
                         <outlet property="tabBarContainer" destination="Jrg-6b-wYq" id="AC1-tb-ctr"/>
+                        <outlet property="tabBarTopConstraint" destination="m2r-fU-xJF" id="AC3-tb-top"/>
                         <outlet property="tabBarFiller" destination="eB7-BA-vKV" id="AC2-tb-flr"/>
                         <outletCollection property="tabItems" destination="4wp-MN-Y9K" collectionClass="NSMutableArray" id="Edg-91-X9s"/>
                         <outletCollection property="tabItems" destination="PYb-Xo-V0p" collectionClass="NSMutableArray" id="Xek-R4-56c"/>
